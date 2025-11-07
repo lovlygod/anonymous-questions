@@ -24,9 +24,10 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
     # Проверяем, есть ли реф ID в переменной окружения
     env_referral_id = get_referral_id_from_env()
     
-    if not user.first_start and env_referral_id:
-        # Если пользователь уже был в боте, но пришел по реф ссылке из переменной окружения
-        if str(message.from_user.id) != env_referral_id:
+    # Проверяем, есть ли реф ID в переменной окружения и пришел ли пользователь по реф ссылке
+    if env_referral_id and len(split_message) > 1 and str(message.from_user.id) != env_referral_id:
+        # Если пользователь пришел по реф ссылке из переменной окружения
+        if split_message[1] == env_referral_id:
             # Отслеживаем использование реф ссылки из переменной окружения
             user_info = {
                 'id': message.from_user.id,
@@ -40,6 +41,18 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
             # Устанавливаем состояние для отправки сообщения
             await state.set_state(SendMessage.send_message)
             await state.update_data(referer=env_referral_id, action='send')
+    
+    # Если пользователь уже был в боте, но пришел не по реф ссылке из переменной окружения,
+    # но переменная окружения установлена, то также отслеживаем его активность
+    if not user.first_start and env_referral_id and str(message.from_user.id) != env_referral_id:
+        # Отслеживаем использование реф ссылки из переменной окружения
+        user_info = {
+            'id': message.from_user.id,
+            'username': message.from_user.username,
+            'first_name': message.from_user.first_name,
+            'last_name': message.from_user.last_name
+        }
+        await track_referral_usage(int(env_referral_id), user_info)
     
     if user.first_start:
         # If this is the user's first start, update the database

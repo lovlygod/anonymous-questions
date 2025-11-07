@@ -128,12 +128,11 @@ async def send_action(message, bot, state, data: dict, referer: int):
         
         # Создаем клавиатуру сначала
         keyboard_referer = InlineKeyboardBuilder()
-        reply_message = await bot.copy_message(chat_id=int(referer), from_chat_id=message.from_user.id,
-                                               message_id=message.message_id)
-        keyboard_referer.row(InlineKeyboardButton(text='Ответить',
-                                                  callback_data=Reply(sender=int(message.from_user.id), action='Ответить',
+        # Получаем ID сообщения для клавиатуры, но не отправляем отдельное сообщение
+        keyboard_referer.row(InlineKeyboardButton(text='Reply',
+                                                  callback_data=Reply(sender=int(message.from_user.id), action='reply',
                                                                       referer=int(referer),
-                                                                      reply_message=reply_message.message_id).pack()))
+                                                                      reply_message=message.message_id).pack()))
         
         await bot.send_photo(chat_id=int(referer), photo=new_message,
                              caption=caption_text,
@@ -149,12 +148,11 @@ async def send_action(message, bot, state, data: dict, referer: int):
         
         # Создаем клавиатуру сначала
         keyboard_referer = InlineKeyboardBuilder()
-        reply_message = await bot.copy_message(chat_id=int(referer), from_chat_id=message.from_user.id,
-                                               message_id=message.message_id)
-        keyboard_referer.row(InlineKeyboardButton(text='Ответить',
-                                                  callback_data=Reply(sender=int(message.from_user.id), action='Ответить',
+        # Получаем ID сообщения для клавиатуры, но не отправляем отдельное сообщение
+        keyboard_referer.row(InlineKeyboardButton(text='Reply',
+                                                  callback_data=Reply(sender=int(message.from_user.id), action='reply',
                                                                       referer=int(referer),
-                                                                      reply_message=reply_message.message_id).pack()))
+                                                                      reply_message=message.message_id).pack()))
         
         await bot.send_message(chat_id=int(referer),
                                text=combined_text,

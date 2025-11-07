@@ -29,9 +29,12 @@ async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbCli
         # Answer the callback query with a message 'Reply'
         await callback_query.answer('Reply')
         # Delete the original message
-        await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
+        try:
+            await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
+        except:
+            pass
         # Send a new message asking the user to enter their reply
-        mes = await bot.send_message(chat_id=callback_query.from_user.id, 
+        mes = await bot.send_message(chat_id=callback_query.from_user.id,
                                     text='💬 <b>Введите ваше сообщение:</b>\n\n'
                                          '🔹 <i>Это сообщение будет отправлено анонимно</i>')
         # Set the FSM state to SendMessage.send_message
@@ -134,10 +137,13 @@ async def send_again(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient,
         await callback_query.answer('Send again')
         action = callback_data.action
         # Delete the original message
-        await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
+        try:
+            await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
+        except:
+            pass
 
         # Send a new message asking the user to enter their reply
-        mes = await bot.send_message(chat_id=callback_query.from_user.id, 
+        mes = await bot.send_message(chat_id=callback_query.from_user.id,
                                     text='💬 <b>Введите ваше сообщение:</b>\n\n'
                                          '🔹 <i>Это сообщение будет отправлено анонимно</i>')
         # Set the FSM state to SendMessage.send_message
@@ -158,7 +164,10 @@ async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbCli
     # Clear any existing FSM state to avoid conflicts
     await state.clear()
     # Delete the original message
-    await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
+    try:
+        await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
+    except:
+        pass
     # Check if the user is subscribed to all sponsor channels
     channels = await db.channels.find({})
     channels_list = [{'channel_id': channel.channel_id, 'url': channel.url, 'name': channel.name} for channel in

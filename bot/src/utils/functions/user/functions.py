@@ -21,7 +21,7 @@ async def send_message_with_referer(message, bot, state, data: dict, referer: in
         try:
             # Attempt to delete the message
             await bot.delete_message(chat_id=message.from_user.id, message_id=int(message_id))
-        except:
+        except Exception:
             pass
     action = data.get('action')
     if action == 'reply':
@@ -185,7 +185,7 @@ async def start_with_referer(message, bot, state, text):
         )
                 
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text='📤 Поделиться своей ссылкой', switch_inline_query=personal_link))
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться своей ссылкой', url=personal_link))
                 
         res = await bot.send_message(chat_id=message.from_user.id, text=welcome_text, reply_markup=keyboard.as_markup())
         await state.set_state(SendMessage.send_message)
@@ -206,14 +206,14 @@ async def start_without_referer(message, bot, state):
     
     if welcome:
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', url=personal_link))
         
         await bot.send_photo(chat_id=message.from_user.id, photo=welcome,
                              caption=welcome_text,
                              reply_markup=keyboard.as_markup())
     else:
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', url=personal_link))
         
         await bot.send_message(chat_id=message.from_user.id,
                                text=welcome_text,

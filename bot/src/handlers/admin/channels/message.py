@@ -71,7 +71,7 @@ async def upload_name(message: Message, bot: Bot, state: FSMContext):
     await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
     data = await state.get_data()
     # Prompt the user to enter the channel's ID
-    res = await bot.edit_message_text(chat_id=message.from_user.id, text='Enter channel ID:',
+    res = await bot.edit_message_text(chat_id=message.from_user.id, text='Введите ID канала:',
                                       message_id=int(data.get('message_id')))
     await state.set_state(AddSponsorFSM.send_chanel_id)
     await state.update_data(message_id=res.message_id, name=message.text)
@@ -83,7 +83,7 @@ async def upload_channel_id(message: Message, bot: Bot, state: FSMContext):
     await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
     data = await state.get_data()
     # Prompt the user to enter the channel's URL
-    res = await bot.edit_message_text(chat_id=message.from_user.id, text='Enter channel URL:',
+    res = await bot.edit_message_text(chat_id=message.from_user.id, text='Введите URL канала:',
                                       message_id=int(data.get('message_id')))
     await state.set_state(AddSponsorFSM.send_url)
     await state.update_data(message_id=res.message_id, name=data.get('name'), channel_id=message.text)
@@ -107,9 +107,9 @@ async def upload_url(message: Message, bot: Bot, state: FSMContext, db: MongoDbC
         markup.row(InlineKeyboardButton(text=channel['name'],
                                         callback_data=ChannelSelect(channel_id=channel['channel_id']).pack()))
     # Add buttons for adding a sponsor and going back to the admin panel
-    markup.row(InlineKeyboardButton(text='Add Sponsor', callback_data=AddSponsor(edit='no').pack()))
-    markup.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    markup.row(InlineKeyboardButton(text='Добавить спонсора', callback_data=AddSponsor(edit='no').pack()))
+    markup.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     # Edit the message to display the channels
-    await bot.edit_message_text(chat_id=message.from_user.id, text="Channels:", reply_markup=markup.as_markup(),
+    await bot.edit_message_text(chat_id=message.from_user.id, text="Каналы:", reply_markup=markup.as_markup(),
                                 message_id=int(data.get('message_id')))
     await state.clear()

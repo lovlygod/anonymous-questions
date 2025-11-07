@@ -40,7 +40,7 @@ async def send_adv(message: Message, bot: Bot, state: FSMContext, db: MongoDbCli
     # Find the document with the minimum advertisement ID
     adv_query = await db.adv.find_one_with_min_adv_id()
     if not adv_query:
-        await bot.send_message(message.from_user.id, text='Adv posts not found')
+        await bot.send_message(message.from_user.id, text='Рекламные посты не найдены')
         return
 
     # Create a dictionary with the caption if it exists

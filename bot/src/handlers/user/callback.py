@@ -15,6 +15,8 @@ router = Router()
 @router.callback_query(Reply.filter())
 async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, state: FSMContext,
                          callback_data=Reply):
+    # Clear any existing FSM state to avoid conflicts
+    await state.clear()
     # Check if the user is subscribed to all sponsor channels
     channels = await db.channels.find({})
     channels_list = [{'channel_id': channel.channel_id, 'url': channel.url, 'name': channel.name} for channel in
@@ -29,7 +31,7 @@ async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbCli
         # Delete the original message
         await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
         # Send a new message asking the user to enter their reply
-        mes = await bot.send_message(chat_id=callback_query.from_user.id, text='Enter your message:')
+        mes = await bot.send_message(chat_id=callback_query.from_user.id, text='Введите ваше сообщение:')
         # Set the FSM state to SendMessage.send_message
         await state.set_state(SendMessage.send_message)
         # Update the FSM context with relevant data
@@ -61,26 +63,49 @@ async def get_link(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, c
 
         if callback_data.check_my:
             # If the user is checking their own link
-            await bot.edit_message_caption(chat_id=callback_query.from_user.id,
-                                           message_id=callback_query.message.message_id,
-                                           caption=f"🔗 Here is your personal link:\n\n"
-                                                   f"🔗 <code>https://t.me/{me.username}"
-                                                   f"?start={callback_query.from_user.id}"
-                                                   f"</code>\n\n"
-                                                   f"Share it and receive anonymous messages")  # No keyboard
+            # Проверяем, содержит ли сообщение подпись (caption)
+            if callback_query.message.caption or callback_query.message.photo:
+                await bot.edit_message_caption(chat_id=callback_query.from_user.id,
+                                               message_id=callback_query.message.message_id,
+                                               caption=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                                       f"🔗 <code>https://t.me/{me.username}"
+                                                       f"?start={callback_query.from_user.id}"
+                                                       f"</code>\n\n"
+                                                       f"Делитесь ей и получайте анонимные сообщения")  # No keyboard
+            else:
+                # Если сообщение не содержит подпись, редактируем текст
+                await bot.edit_message_text(chat_id=callback_query.from_user.id,
+                                            message_id=callback_query.message.message_id,
+                                            text=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                                 f"🔗 <code>https://t.me/{me.username}"
+                                                 f"?start={callback_query.from_user.id}"
+                                                 f"</code>\n\n"
+                                                 f"Делитесь ей и получайте анонимные сообщения")  # No keyboard
         else:
             keyboard_sender = InlineKeyboardBuilder()
             keyboard_sender.row(InlineKeyboardButton(text='Send again',
                                                      callback_data=SendAgain(referer=int(referer),
                                                                              action='send').pack()))
-            await bot.edit_message_caption(chat_id=callback_query.from_user.id,
-                                           message_id=callback_query.message.message_id,
-                                           caption=f"🔗 Here is your personal link:\n\n"
-                                                   f"🔗 <code>https://t.me/{me.username}"
-                                                   f"?start={callback_query.from_user.id}"
-                                                   f"</code>\n\n"
-                                                   f"Share it and receive anonymous messages",
-                                           reply_markup=keyboard_sender.as_markup())
+            # Проверяем, содержит ли сообщение подпись (caption)
+            if callback_query.message.caption or callback_query.message.photo:
+                await bot.edit_message_caption(chat_id=callback_query.from_user.id,
+                                               message_id=callback_query.message.message_id,
+                                               caption=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                                       f"🔗 <code>https://t.me/{me.username}"
+                                                       f"?start={callback_query.from_user.id}"
+                                                       f"</code>\n\n"
+                                                       f"Делитесь ей и получайте анонимные сообщения",
+                                               reply_markup=keyboard_sender.as_markup())
+            else:
+                # Если сообщение не содержит подпись, редактируем текст
+                await bot.edit_message_text(chat_id=callback_query.from_user.id,
+                                            message_id=callback_query.message.message_id,
+                                            text=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                                 f"🔗 <code>https://t.me/{me.username}"
+                                                 f"?start={callback_query.from_user.id}"
+                                                 f"</code>\n\n"
+                                                 f"Делитесь ей и получайте анонимные сообщения",
+                                            reply_markup=keyboard_sender.as_markup())
     else:
         # If not subscribed, prompt the user to subscribe
         callback = GetLink(referer=int(callback_data.referer), check_my=callback_data.check_my).pack()
@@ -93,6 +118,8 @@ async def get_link(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, c
 @router.callback_query(SendAgain.filter())
 async def send_again(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, callback_data: SendAgain,
                      state: FSMContext):
+    # Clear any existing FSM state to avoid conflicts
+    await state.clear()
     # Check if the user is subscribed to all sponsor channels
     channels = await db.channels.find({})
     channels_list = [{'channel_id': channel.channel_id, 'url': channel.url, 'name': channel.name} for channel in
@@ -108,7 +135,7 @@ async def send_again(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient,
         await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
 
         # Send a new message asking the user to enter their reply
-        mes = await bot.send_message(chat_id=callback_query.from_user.id, text='Enter your message:')
+        mes = await bot.send_message(chat_id=callback_query.from_user.id, text='Введите ваше сообщение:')
         # Set the FSM state to SendMessage.send_message
         await state.set_state(SendMessage.send_message)
         # Update the FSM context with relevant data
@@ -124,6 +151,8 @@ async def send_again(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient,
 @router.callback_query(Start.filter())
 async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, state: FSMContext,
                          callback_data: Start):
+    # Clear any existing FSM state to avoid conflicts
+    await state.clear()
     # Delete the original message
     await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
     # Check if the user is subscribed to all sponsor channels

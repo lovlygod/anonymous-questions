@@ -28,14 +28,14 @@ async def update_channel_data(db, filter, update):
 def build_keyboard(channel_id):
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
-        InlineKeyboardButton(text='Remove Sponsor', callback_data=RemoveSponsor(channel_id=channel_id).pack()))
+        InlineKeyboardButton(text='Удалить спонсора', callback_data=RemoveSponsor(channel_id=channel_id).pack()))
     keyboard.row(
-        InlineKeyboardButton(text='Edit Name', callback_data=AddSponsor(edit='name', channel_id=channel_id).pack()))
+        InlineKeyboardButton(text='Изменить имя', callback_data=AddSponsor(edit='name', channel_id=channel_id).pack()))
     keyboard.row(
-        InlineKeyboardButton(text='Edit ID', callback_data=AddSponsor(edit='id', channel_id=channel_id).pack()))
+        InlineKeyboardButton(text='Изменить ID', callback_data=AddSponsor(edit='id', channel_id=channel_id).pack()))
     keyboard.row(
-        InlineKeyboardButton(text='Edit URL', callback_data=AddSponsor(edit='url', channel_id=channel_id).pack()))
-    keyboard.row(InlineKeyboardButton(text='Back', callback_data=SponsorList().pack()))
+        InlineKeyboardButton(text='Изменить URL', callback_data=AddSponsor(edit='url', channel_id=channel_id).pack()))
+    keyboard.row(InlineKeyboardButton(text='Назад', callback_data=SponsorList().pack()))
     return keyboard
 
 
@@ -55,21 +55,21 @@ async def generate_random_string():
 def build_keyboard_referrals(ref_id):
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
-        InlineKeyboardButton(text='Remove', callback_data=RemoveReferral(id=ref_id).pack()))
-    keyboard.row(InlineKeyboardButton(text='Back', callback_data=AdminRefs().pack()))
+        InlineKeyboardButton(text='Удалить', callback_data=RemoveReferral(id=ref_id).pack()))
+    keyboard.row(InlineKeyboardButton(text='Назад', callback_data=AdminRefs().pack()))
     return keyboard
 
 
 # Function to create a keyboard for advertisement management
 def create_keyboard(adv_query, next_adv_query, adv_quantity):
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text='Edit Post', callback_data=AdvEdit(adv_id=int(adv_query.adv_id)).pack()))
+    builder.row(InlineKeyboardButton(text='Редактировать пост', callback_data=AdvEdit(adv_id=int(adv_query.adv_id)).pack()))
     if int(adv_quantity) >= 2:
-        builder.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+        builder.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     if int(adv_quantity) > 1:
-        builder.add(InlineKeyboardButton(text='Next', callback_data=AdvNav(index=next_adv_query.adv_id).pack()))
-    builder.row(InlineKeyboardButton(text='Add Post', callback_data=AddAdv().pack()))
-    builder.add(InlineKeyboardButton(text='Remove Post', callback_data=AdvRemove(adv_id=int(adv_query.adv_id)).pack()))
+        builder.add(InlineKeyboardButton(text='Следующий', callback_data=AdvNav(index=next_adv_query.adv_id).pack()))
+    builder.row(InlineKeyboardButton(text='Добавить пост', callback_data=AddAdv().pack()))
+    builder.add(InlineKeyboardButton(text='Удалить пост', callback_data=AdvRemove(adv_id=int(adv_query.adv_id)).pack()))
     return builder
 
 
@@ -112,10 +112,10 @@ async def send_media(bot, callback_query, adv_query, builder, **kwargs):
 # Function to send a message when no advertisements are found
 async def send_no_adv_message(bot, callback_query):
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text='Add Post', callback_data=AddAdv().pack()))
-    keyboard.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    keyboard.row(InlineKeyboardButton(text='Добавить пост', callback_data=AddAdv().pack()))
+    keyboard.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
-    await bot.send_message(chat_id=callback_query.from_user.id, text='No advertisement posts found.',
+    await bot.send_message(chat_id=callback_query.from_user.id, text='Рекламные посты не найдены.',
                            reply_markup=keyboard.as_markup())
 
 

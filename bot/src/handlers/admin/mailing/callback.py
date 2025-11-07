@@ -13,11 +13,11 @@ router = Router()
 # Handler for starting the mailing process
 @router.callback_query(AdminMailing.filter())
 async def mailing_start(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
-    await callback_query.answer('✉️ Mailing')
+    await callback_query.answer('✉️ Рассылка')
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    keyboard.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     # Prompt the user to enter the text for the mailing
-    mes = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Enter text for mailing:',
+    mes = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Введите текст для рассылки:',
                                       message_id=callback_query.message.message_id, reply_markup=keyboard.as_markup())
     await state.set_state(Mailing.mailing_send)
     await state.update_data(message_id=mes.message_id)
@@ -34,7 +34,7 @@ async def send_all_confirm(callback_query: CallbackQuery, db: MongoDbClient,
     failed_sends = 0
     # Notify the user that the mailing process may take a long time
     mes = await bot.send_message(chat_id=callback_query.from_user.id,
-                                 text=f'Please wait, this may take a long time...')
+                                 text=f'Пожалуйста, подождите, это может занять много времени...')
     for user in users_list:
         try:
             # Try to send the message to each user
@@ -46,10 +46,10 @@ async def send_all_confirm(callback_query: CallbackQuery, db: MongoDbClient,
         print(f'Trying to send mailing: {int(successful_sends + failed_sends)} out of {len(users_list)}')
 
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    keyboard.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     await bot.delete_message(chat_id=callback_query.from_user.id, message_id=mes.message_id)
     # Notify the user of the mailing results
     await bot.send_message(chat_id=callback_query.from_user.id,
-                           text=f'Mailing sent!\nTotal users: {len(users_list)}\n'
-                                f'Successful: {successful_sends}\nFailed: {failed_sends}',
+                           text=f'Рассылка отправлена!\nВсего пользователей: {len(users_list)}\n'
+                                f'Успешно: {successful_sends}\nНеудачно: {failed_sends}',
                            reply_markup=keyboard.as_markup())

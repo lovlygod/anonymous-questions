@@ -14,12 +14,12 @@ async def check_stats(callback_query: CallbackQuery, db: MongoDbClient, bot: Bot
     users = await db.users.count({})
 
     # Answer the callback query with a message 'Statistics'
-    await callback_query.answer('Statistics')
+    await callback_query.answer('Статистика')
 
     # Create a keyboard with a 'Back' button
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    keyboard.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
 
     # Edit the message text to show the number of users with the keyboard
-    await bot.edit_message_text(chat_id=callback_query.from_user.id, text=f'Number of users: {users}',
+    await bot.edit_message_text(chat_id=callback_query.from_user.id, text=f'Количество пользователей: {users}',
                                 message_id=callback_query.message.message_id, reply_markup=keyboard.as_markup())

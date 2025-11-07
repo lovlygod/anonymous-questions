@@ -21,24 +21,24 @@ async def admin_panel(callback_query: CallbackQuery, db: MongoDbClient, bot: Bot
     channels_list = [{'channel_id': channel.channel_id, 'url': channel.url, 'name': channel.name} for channel in
                      channels]
     markup = InlineKeyboardBuilder()
-    await callback_query.answer('Channels')
+    await callback_query.answer('Каналы')
 
     # Add each channel to the inline keyboard
     for channel in channels_list:
         markup.row(InlineKeyboardButton(text=channel['name'],
                                         callback_data=ChannelSelect(channel_id=channel['channel_id']).pack()))
     # Add buttons for adding a sponsor and going back to the admin panel
-    markup.row(InlineKeyboardButton(text='Add Sponsor', callback_data=AddSponsor(edit='no').pack()))
-    markup.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    markup.row(InlineKeyboardButton(text='Добавить спонсора', callback_data=AddSponsor(edit='no').pack()))
+    markup.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     # Edit the message to display the channels
-    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Channels:",
+    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Каналы:",
                                 message_id=callback_query.message.message_id, reply_markup=markup.as_markup())
 
 
 # Handler for the channel selection callback query
 @router.callback_query(ChannelSelect.filter())
 async def channels_admin(callback_query: CallbackQuery, callback_data: ChannelSelect, bot: Bot, db: MongoDbClient):
-    await callback_query.answer('Channel')  # Send a response to the callback query
+    await callback_query.answer('Канал')  # Send a response to the callback query
 
     # Retrieve the selected channel's information from the database
     info = await db.channels.find_one({'channel_id': int(callback_data.channel_id)})
@@ -56,7 +56,7 @@ async def channels_admin(callback_query: CallbackQuery, callback_data: ChannelSe
 @router.callback_query(AddSponsor.filter())
 async def channels_admin(callback_query: CallbackQuery, callback_data: AddSponsor, bot: Bot, state: FSMContext,
                          db: MongoDbClient):
-    await callback_query.answer('Add Sponsor')  # Send a response to the callback query
+    await callback_query.answer('Добавить спонсора')  # Send a response to the callback query
 
     try:
         # Retrieve the selected channel's information from the database
@@ -66,19 +66,19 @@ async def channels_admin(callback_query: CallbackQuery, callback_data: AddSponso
     await callback_query.answer('Add Sponsor')
     # Edit the message to prompt the user for the sponsor's name, ID, or URL based on the callback data
     if callback_data.edit == 'no':
-        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Enter name:',
+        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Введите имя:',
                                           message_id=callback_query.message.message_id)
         await state.set_state(AddSponsorFSM.send_name)
     elif callback_data.edit == 'name':
-        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Enter name:',
+        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Введите имя:',
                                           message_id=callback_query.message.message_id)
         await state.set_state(EditSponsorFSM.edit_name)
     elif callback_data.edit == 'id':
-        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Enter channel ID:',
+        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Введите ID канала:',
                                           message_id=callback_query.message.message_id)
         await state.set_state(EditSponsorFSM.edit_channel_id)
     elif callback_data.edit == 'url':
-        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Enter URL:',
+        res = await bot.edit_message_text(chat_id=callback_query.from_user.id, text='Введите URL:',
                                           message_id=callback_query.message.message_id)
         await state.set_state(EditSponsorFSM.edit_url)
 
@@ -94,7 +94,7 @@ async def channels_admin(callback_query: CallbackQuery, callback_data: AddSponso
 # Handler for the sponsor list callback query
 @router.callback_query(SponsorList.filter())
 async def channels_admin(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient):
-    await callback_query.answer('Back')  # Send a response to the callback query
+    await callback_query.answer('Назад')  # Send a response to the callback query
 
     # Retrieve all channels from the database
     channels = await db.channels.find({})
@@ -107,10 +107,10 @@ async def channels_admin(callback_query: CallbackQuery, bot: Bot, db: MongoDbCli
         markup.row(InlineKeyboardButton(text=channel['name'],
                                         callback_data=ChannelSelect(channel_id=channel['channel_id']).pack()))
     # Add buttons for adding a sponsor and going back to the admin panel
-    markup.row(InlineKeyboardButton(text='Add Sponsor', callback_data=AddSponsor(edit='no').pack()))
-    markup.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    markup.row(InlineKeyboardButton(text='Добавить спонсора', callback_data=AddSponsor(edit='no').pack()))
+    markup.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     # Edit the message to display the channels
-    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Channels:",
+    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Каналы:",
                                 reply_markup=markup.as_markup(), message_id=callback_query.message.message_id)
 
 
@@ -121,7 +121,7 @@ logging.basicConfig(level=logging.INFO)
 # Handler for the remove sponsor callback query
 @router.callback_query(RemoveSponsor.filter())
 async def remove_sponsor(callback_query: CallbackQuery, bot: Bot, callback_data: RemoveSponsor, db: MongoDbClient):
-    await callback_query.answer('Remove')  # Send a response to the callback query
+    await callback_query.answer('Удалить')  # Send a response to the callback query
 
     # Delete the selected channel from the database
     await db.channels.delete_one({'channel_id': callback_data.channel_id})
@@ -135,8 +135,8 @@ async def remove_sponsor(callback_query: CallbackQuery, bot: Bot, callback_data:
         markup.row(InlineKeyboardButton(text=channel['name'],
                                         callback_data=ChannelSelect(channel_id=channel['channel_id']).pack()))
     # Add buttons for adding a sponsor and going back to the admin panel
-    markup.row(InlineKeyboardButton(text='Add Sponsor', callback_data=AddSponsor(edit='no').pack()))
-    markup.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    markup.row(InlineKeyboardButton(text='Добавить спонсора', callback_data=AddSponsor(edit='no').pack()))
+    markup.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     # Edit the message to display the channels
-    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Channels:",
+    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Каналы:",
                                 reply_markup=markup.as_markup(), message_id=callback_query.message.message_id)

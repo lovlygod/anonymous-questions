@@ -22,19 +22,19 @@ async def admin_panel(callback_query: CallbackQuery, bot: Bot):
 
         # Add buttons to the keyboard for different admin actions
         keyboard_admin.row(
-            InlineKeyboardButton(text='Statistics📊', callback_data=AdminStats().pack()),
-            InlineKeyboardButton(text='Upload📝', callback_data=AdminUpload().pack())
+            InlineKeyboardButton(text='Статистика📊', callback_data=AdminStats().pack()),
+            InlineKeyboardButton(text='Загрузить📝', callback_data=AdminUpload().pack())
         )
         keyboard_admin.row(
-            InlineKeyboardButton(text='Mailing📩', callback_data=AdminMailing().pack()),
-            InlineKeyboardButton(text='Channels🗣', callback_data=AdminChannels().pack())
+            InlineKeyboardButton(text='Рассылка📩', callback_data=AdminMailing().pack()),
+            InlineKeyboardButton(text='Каналы🗣', callback_data=AdminChannels().pack())
         )
         keyboard_admin.row(
-            InlineKeyboardButton(text='Referrals🔗', callback_data=AdminRefs().pack()),
-            InlineKeyboardButton(text='Advertisement Post📢', callback_data=AdminAdv().pack())
+            InlineKeyboardButton(text='Рефералы🔗', callback_data=AdminRefs().pack()),
+            InlineKeyboardButton(text='Рекламный пост📢', callback_data=AdminAdv().pack())
         )
 
         # Edit the message text to show the admin panel with the keyboard
-        await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Admin panel:",
+        await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Панель администратора:",
                                     message_id=callback_query.message.message_id,
                                     reply_markup=keyboard_admin.as_markup())

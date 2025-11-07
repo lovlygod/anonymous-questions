@@ -10,7 +10,7 @@ router = Router()
 # Admin-panel Stats
 @router.callback_query(AdminUpload.filter())
 async def upload_users(callback_query: CallbackQuery, db: MongoDbClient, bot: Bot):
-    await callback_query.answer('Upload')  # Send a response to the callback query
+    await callback_query.answer('Загрузка')  # Send a response to the callback query
 
     # Fetch users from the database with a limit of 10 billion
     users = await db.users.find({}, count=10000000000)

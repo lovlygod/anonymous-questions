@@ -24,16 +24,16 @@ async def referrals_list(callback_query: CallbackQuery, db: MongoDbClient, bot: 
     referrals_list = [{'id': referral.id, 'link': referral.link, 'clicks': referral.clicks} for referral in referrals]
     builder = InlineKeyboardBuilder()
     # Send a notification to the user
-    await callback_query.answer('Referrals')
+    await callback_query.answer('Рефералы')
     # Add each referral to the inline keyboard
     for referral in referrals_list:
         builder.row(InlineKeyboardButton(text=referral['id'],
                                          callback_data=ReferralSelect(id=referral['id']).pack()))
     # Add buttons for adding a new referral and going back to the admin panel
-    builder.row(InlineKeyboardButton(text='Add', callback_data=AddReferral().pack()))
-    builder.row(InlineKeyboardButton(text='Back', callback_data=AdminPanel().pack()))
+    builder.row(InlineKeyboardButton(text='Добавить', callback_data=AddReferral().pack()))
+    builder.row(InlineKeyboardButton(text='Назад', callback_data=AdminPanel().pack()))
     # Edit the message to display the list of referrals
-    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Referrals:",
+    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Рефералы:",
                                 message_id=callback_query.message.message_id, reply_markup=builder.as_markup())
 
 
@@ -55,11 +55,11 @@ async def referrals_select(callback_query: CallbackQuery, callback_data: Referra
 @router.callback_query(AddReferral.filter())
 async def referrals_add(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient):
     # Send a notification to the user
-    await callback_query.answer('Add')
+    await callback_query.answer('Добавить')
     # Generate a new random id for the referral
     new_id = await generate_random_string()
     # Insert the new referral into the database
-    await db.referrals.insert_one({'id': new_id, 'link': f'https://t.me/anonfm_bot?start={new_id}'})
+    await db.referrals.insert_one({'id': new_id, 'link': f'https://t.me/AnonQuest_Robot?start={new_id}'})
     # Fetch the new referral's information from the database
     info = await db.referrals.find_one({'id': str(new_id)})
     # Send a notification to the user with the new referral's id
@@ -83,14 +83,14 @@ async def remove_sponsor(callback_query: CallbackQuery, bot: Bot, callback_data:
     referrals_list = [{'id': referral.id, 'link': referral.link, 'clicks': referral.clicks} for referral in referrals]
     builder = InlineKeyboardBuilder()
     # Send a notification to the user
-    await callback_query.answer('Referrals')
+    await callback_query.answer('Рефералы')
     # Add each remaining referral to the inline keyboard
     for referral in referrals_list:
         builder.row(InlineKeyboardButton(text=referral['id'],
                                          callback_data=ReferralSelect(id=referral['id']).pack()))
     # Add buttons for adding a new referral and going back to the admin panel
-    builder.row(InlineKeyboardButton(text='Add', callback_data=AddReferral().pack()))
-    builder.row(InlineKeyboardButton(text='Back', callback_data=AdminRefs().pack()))
+    builder.row(InlineKeyboardButton(text='Добавить', callback_data=AddReferral().pack()))
+    builder.row(InlineKeyboardButton(text='Назад', callback_data=AdminRefs().pack()))
     # Edit the message to display the updated list of referrals
-    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Referrals:",
+    await bot.edit_message_text(chat_id=callback_query.from_user.id, text="Рефералы:",
                                 message_id=callback_query.message.message_id, reply_markup=builder.as_markup())

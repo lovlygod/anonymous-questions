@@ -22,25 +22,26 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
     if user.first_start:
         # If this is the user's first start, update the database
         await db.users.update_one({'id': message.from_user.id}, {'first_start': False})
+        # handle_start will send its own welcome message, so we don't need to send it here
         await handle_start(message, bot, db, state, split_message)
     else:
         await handle_subscription_check(bot, message, db, state, split_message)
-    
-    # Send welcome message with share button
-    me = await bot.get_me()
-    personal_link = f"https://t.me/{me.username}?start={message.from_user.id}"
-    
-    welcome_text = (
-        "🎉 <b>Добро пожаловать в бот анонимных вопросов!</b>\n\n"
-        "💬 <b>Начните получать анонимные вопросы прямо сейчас!</b>\n\n"
-        f"👉 <code>t.me/{me.username}?start={message.from_user.id}</code>\n\n"
-        "💌 <i>Разместите эту ссылку ☝️ в описании своего профиля Telegram, TikTok, Instagram (stories), чтобы вам могли написать</i>"
-    )
-    
-    keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
-    
-    await message.answer(welcome_text, reply_markup=keyboard.as_markup())
+        
+        # Send welcome message with share button only when not from referral link
+        me = await bot.get_me()
+        personal_link = f"https://t.me/{me.username}?start={message.from_user.id}"
+        
+        welcome_text = (
+            "🎉 <b>Добро пожаловать в бот анонимных вопросов!</b>\n\n"
+            "💬 <b>Начните получать анонимные вопросы прямо сейчас!</b>\n\n"
+            f"👉 <code>t.me/{me.username}?start={message.from_user.id}</code>\n\n"
+            "💌 <i>Разместите эту ссылку ☝️ в описании своего профиля Telegram, TikTok, Instagram (stories), чтобы вам могли написать</i>"
+        )
+        
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
+        
+        await message.answer(welcome_text, reply_markup=keyboard.as_markup())
     
     # Show advertisement
     await show_advert(message.from_user.id)

@@ -110,20 +110,13 @@ async def reply_action(message, bot, state, data: dict, referer: int, sender: in
 
 # Function for send action
 async def send_action(message, bot, state, data: dict, referer: int):
-    keyboard_referer = InlineKeyboardBuilder()
     keyboard_sender = InlineKeyboardBuilder()
     keyboard_sender.row(
         InlineKeyboardButton(text='Получить ссылку', callback_data=GetLink(referer=int(referer), check_my=False).pack()))
     keyboard_sender.row(
         InlineKeyboardButton(text='Отправить снова', callback_data=SendAgain(referer=int(referer), action='send').pack()))
-    reply_message = await bot.copy_message(chat_id=int(referer), from_chat_id=message.from_user.id,
-                                           message_id=message.message_id)
-    keyboard_referer.row(InlineKeyboardButton(text='Reply',
-                                              callback_data=Reply(sender=int(message.from_user.id), action='reply',
-                                                                  referer=int(referer),
-                                                                  reply_message=reply_message.message_id).pack()))
     
-    # Подготовим объединенное сообщение для отправки получателю
+    # Подготовим объединенное сообщение для отправки получателю сначала
     if new_message:
         # Если есть фото для нового сообщения, отправим его с объединенным текстом
         caption_text = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
@@ -132,6 +125,15 @@ async def send_action(message, bot, state, data: dict, referer: int):
         elif message.caption:
             caption_text += f'<i>{message.caption}</i>\n\n'
         caption_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        
+        # Создаем клавиатуру сначала
+        keyboard_referer = InlineKeyboardBuilder()
+        reply_message = await bot.copy_message(chat_id=int(referer), from_chat_id=message.from_user.id,
+                                               message_id=message.message_id)
+        keyboard_referer.row(InlineKeyboardButton(text='Ответить',
+                                                  callback_data=Reply(sender=int(message.from_user.id), action='Ответить',
+                                                                      referer=int(referer),
+                                                                      reply_message=reply_message.message_id).pack()))
         
         await bot.send_photo(chat_id=int(referer), photo=new_message,
                              caption=caption_text,
@@ -144,6 +146,15 @@ async def send_action(message, bot, state, data: dict, referer: int):
         elif message.caption:
             combined_text += f'<i>{message.caption}</i>\n\n'
         combined_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        
+        # Создаем клавиатуру сначала
+        keyboard_referer = InlineKeyboardBuilder()
+        reply_message = await bot.copy_message(chat_id=int(referer), from_chat_id=message.from_user.id,
+                                               message_id=message.message_id)
+        keyboard_referer.row(InlineKeyboardButton(text='Ответить',
+                                                  callback_data=Reply(sender=int(message.from_user.id), action='Ответить',
+                                                                      referer=int(referer),
+                                                                      reply_message=reply_message.message_id).pack()))
         
         await bot.send_message(chat_id=int(referer),
                                text=combined_text,

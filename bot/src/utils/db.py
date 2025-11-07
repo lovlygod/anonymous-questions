@@ -13,17 +13,45 @@ from src.models.user import User
 MONGO_URI = os.getenv("MONGO_URI")
 if MONGO_URI:
     client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
-else:
+elif all([os.getenv("MONGO_HOST"), os.getenv("MONGO_PORT"), os.getenv("MONGO_USERNAME"), os.getenv("MONGO_PASSWORD")]):
     client = motor.motor_asyncio.AsyncIOMotorClient(
         f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST")}:{os.getenv("MONGO_PORT")}')
+else:
+    # Если переменные не заданы, используем переменные от Railway
+    MONGOHOST = os.getenv("MONGOHOST", "localhost")
+    MONGOPORT = os.getenv("MONGOPORT", "27017")
+    MONGOUSER = os.getenv("MONGOUSER")
+    MONGOPASSWORD = os.getenv("MONGOPASSWORD")
+    
+    if all([MONGOHOST, MONGOPORT, MONGOUSER, MONGOPASSWORD]):
+        client = motor.motor_asyncio.AsyncIOMotorClient(
+            f'mongodb://{MONGOUSER}:{MONGOPASSWORD}@{MONGOHOST}:{MONGOPORT}')
+    else:
+        # Если и переменные от Railway не заданы, используем локальное подключение
+        client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+
 raw_db = client[os.getenv("MONGO_DB_NAME", "default_db")]
 
 external_MONGO_URI = os.getenv("EXTERNAL_MONGO_URI")
 if external_MONGO_URI:
     external_client = motor.motor_asyncio.AsyncIOMotorClient(external_MONGO_URI)
-else:
+elif all([os.getenv("MONGO_HOST_EXTERNAL"), os.getenv("MONGO_PORT_EXTERNAL"), os.getenv("MONGO_USERNAME"), os.getenv("MONGO_PASSWORD")]):
     external_client = motor.motor_asyncio.AsyncIOMotorClient(
         f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST_EXTERNAL")}:{os.getenv("MONGO_PORT_EXTERNAL")}')
+else:
+    # Если переменные не заданы, используем переменные от Railway для внешнего подключения
+    MONGOHOST = os.getenv("MONGOHOST", "localhost")
+    MONGOPORT = os.getenv("MONGOPORT", "27017")
+    MONGOUSER = os.getenv("MONGOUSER")
+    MONGOPASSWORD = os.getenv("MONGOPASSWORD")
+    
+    if all([MONGOHOST, MONGOPORT, MONGOUSER, MONGOPASSWORD]):
+        external_client = motor.motor_asyncio.AsyncIOMotorClient(
+            f'mongodb://{MONGOUSER}:{MONGOPASSWORD}@{MONGOHOST}:{MONGOPORT}')
+    else:
+        # Если и переменные от Railway не заданы, используем локальное подключение
+        external_client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+
 external_db = external_client[os.getenv("MONGO_DB_NAME", "default_db")]
 
 

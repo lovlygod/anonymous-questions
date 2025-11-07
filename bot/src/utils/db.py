@@ -139,14 +139,7 @@ class MongoDbClient(BaseModel):
     channels: Any
     referrals: Any
     adv: Any
-
-
-
-class MongoDbClient(BaseModel):
-    users: Any
-    channels: Any
-    referrals: Any
-    adv: Any
+    referral_tracking: Any
 
 
 db = MongoDbClient(

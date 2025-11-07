@@ -9,13 +9,22 @@ from src.models.channels import Channels
 from src.models.referrals import Referrals
 from src.models.user import User
 
-client = motor.motor_asyncio.AsyncIOMotorClient(
-    f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST")}:{os.getenv("MONGO_PORT")}')
-raw_db = client[os.getenv("MONGO_DB_NAME")]
+# Используем MONGO_URI если она задана, иначе старую систему
+MONGO_URI = os.getenv("MONGO_URI")
+if MONGO_URI:
+    client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
+else:
+    client = motor.motor_asyncio.AsyncIOMotorClient(
+        f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST")}:{os.getenv("MONGO_PORT")}')
+raw_db = client[os.getenv("MONGO_DB_NAME", "default_db")]
 
-external_client = motor.motor_asyncio.AsyncIOMotorClient(
-    f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST_EXTERNAL")}:{os.getenv("MONGO_PORT_EXTERNAL")}')
-external_db = external_client[os.getenv("MONGO_DB_NAME")]
+external_MONGO_URI = os.getenv("EXTERNAL_MONGO_URI")
+if external_MONGO_URI:
+    external_client = motor.motor_asyncio.AsyncIOMotorClient(external_MONGO_URI)
+else:
+    external_client = motor.motor_asyncio.AsyncIOMotorClient(
+        f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST_EXTERNAL")}:{os.getenv("MONGO_PORT_EXTERNAL")}')
+external_db = external_client[os.getenv("MONGO_DB_NAME", "default_db")]
 
 
 class Collection:

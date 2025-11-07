@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 from datetime import datetime
@@ -16,7 +17,9 @@ router = Router()
 @router.message(Command('admin'))
 async def admin_panel(message: Message):
     # Check if the user ID matches the admin IDs
-    if message.from_user.id == 686138890 or message.from_user.id == 1291860365:
+    admin_id_1 = int(os.getenv("ADMIN_ID_1"))
+    admin_id_2 = int(os.getenv("ADMIN_ID_2"))
+    if message.from_user.id == admin_id_1 or message.from_user.id == admin_id_2:
         keyboard_admin = InlineKeyboardBuilder()
 
         # Add buttons to the keyboard for different admin actions

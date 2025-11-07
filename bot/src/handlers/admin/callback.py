@@ -1,3 +1,4 @@
+import os
 from aiogram import Bot, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -14,7 +15,9 @@ async def admin_panel(callback_query: CallbackQuery, bot: Bot):
     await callback_query.answer('Back')
 
     # Check if the user ID matches the admin IDs
-    if callback_query.from_user.id == 686138890 or callback_query.from_user.id == 1291860365:
+    admin_id_1 = int(os.getenv("ADMIN_ID_1"))
+    admin_id_2 = int(os.getenv("ADMIN_ID_2"))
+    if callback_query.from_user.id == admin_id_1 or callback_query.from_user.id == admin_id_2:
         keyboard_admin = InlineKeyboardBuilder()
 
         # Add buttons to the keyboard for different admin actions

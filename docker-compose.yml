@@ -1,22 +1,21 @@
-version: '3'
+version: '3.8'
 
 services:
   bot:
     build:
       context: .
-      dockerfile: dockerfile.bot
-
-  mongo:
-    image: mongo:4.4
-    restart: always
+      dockerfile: Dockerfile
     environment:
-      MONGO_INITDB_ROOT_USERNAME: dev
-      MONGO_INITDB_ROOT_PASSWORD: 6ec30fa38ebdfdda72dc88eaec91e94d
-      MONGO_INITDB_DATABASE: admin
-    volumes:
-      - ./docker/mongo/mongodump:/mongodump
-      - ./docker/mongo/data:/data/db
-    ports:
-      - 27052:27017
+      - BOT_TOKEN=${BOT_TOKEN}
+      - MONGO_URI=${MONGO_URI}
+      - ADMIN_ID_1=${ADMIN_ID_1}
+      - ADMIN_ID_2=${ADMIN_ID_2}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_HOST_EXTERNAL=${MONGO_HOST_EXTERNAL}
+      - MONGO_PORT_EXTERNAL=${MONGO_PORT_EXTERNAL}
 
 

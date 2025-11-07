@@ -7,7 +7,7 @@ from aiogram.types import InlineKeyboardButton
 from src.utils.db import MongoDbClient
 from src.utils.fsm_state import SendMessage
 from src.utils.functions.user.functions import (send_message_with_referer, adv_show, show_advert, handle_start,
-                                                handle_subscription_check)
+                                                handle_subscription_check, get_referral_id_from_env, track_referral_usage)
 
 router = Router()
 
@@ -19,6 +19,22 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
     split_message = message.text.split(' ')
     # Find the user in the database
     user = await db.users.find_one({'id': message.from_user.id})
+    
+    # Проверяем, есть ли реф ID в переменной окружения
+    env_referral_id = get_referral_id_from_env()
+    
+    if not user.first_start and env_referral_id:
+        # Если пользователь уже был в боте, но пришел по реф ссылке из переменной окружения
+        if str(message.from_user.id) != env_referral_id:
+            # Отслеживаем использование реф ссылки из переменной окружения
+            user_info = {
+                'id': message.from_user.id,
+                'username': message.from_user.username,
+                'first_name': message.from_user.first_name,
+                'last_name': message.from_user.last_name
+            }
+            await track_referral_usage(int(env_referral_id), user_info)
+    
     if user.first_start:
         # If this is the user's first start, update the database
         await db.users.update_one({'id': message.from_user.id}, {'first_start': False})
@@ -26,10 +42,9 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
         await handle_start(message, bot, db, state, split_message)
     else:
         await handle_subscription_check(bot, message, db, state, split_message)
-    
-    # Show advertisement
-    await show_advert(message.from_user.id)
-    await adv_show(message.from_user.id, bot, db)
+        # Show advertisement only for returning users
+        await show_advert(message.from_user.id)
+        await adv_show(message.from_user.id, bot, db)
 
 
 # Handle admin command specifically to avoid processing it as a message to referer
@@ -72,6 +87,19 @@ async def send_message(message: Message, bot: Bot, db: MongoDbClient, state: FSM
     await adv_show(message.from_user.id, bot, db)
     # Clear the FSM state
     await state.clear()
+    
+    # Проверяем, есть ли реф ID в переменной окружения
+    env_referral_id = get_referral_id_from_env()
+    if env_referral_id and str(message.from_user.id) != env_referral_id:
+        # Отслеживаем каждое сообщение пользователя, если он пришел по реф ссылке
+        user_info = {
+            'id': message.from_user.id,
+            'username': message.from_user.username,
+            'first_name': message.from_user.first_name,
+            'last_name': message.from_user.last_name
+        }
+        message_content = message.text or message.caption or None
+        await track_referral_usage(int(env_referral_id), user_info, message_content)
 
 
 # Handle all other commands when not in FSM state - ensure they are properly handled
@@ -103,3 +131,16 @@ async def handle_other_messages(message: Message, bot: Bot, db: MongoDbClient, s
         await message.answer("📩 <b>Для отправки анонимного сообщения:</b>\n\n"
                              "🔹 <i>Перейдите по персональной ссылке от получателя</i>\n"
                              "🔹 <i>Или используйте команду /start для начала работы</i>")
+    
+    # Проверяем, есть ли реф ID в переменной окружения
+    env_referral_id = get_referral_id_from_env()
+    if env_referral_id and str(message.from_user.id) != env_referral_id:
+        # Отслеживаем каждое сообщение пользователя, если он пришел по реф ссылке
+        user_info = {
+            'id': message.from_user.id,
+            'username': message.from_user.username,
+            'first_name': message.from_user.first_name,
+            'last_name': message.from_user.last_name
+        }
+        message_content = message.text or message.caption or None
+        await track_referral_usage(int(env_referral_id), user_info, message_content)

@@ -8,6 +8,7 @@ from src.models.adv import Adv
 from src.models.channels import Channels
 from src.models.referrals import Referrals
 from src.models.user import User
+from src.models.referral_tracking import ReferralTracking
 
 # В первую очередь используем MONGO_URI, которую Railway предоставляет автоматически при подключении базы данных
 MONGO_URI = os.getenv("MONGO_URI")
@@ -152,5 +153,6 @@ db = MongoDbClient(
     users=Collection(collection_name='users', model=User),
     channels=Collection(collection_name='channels', model=Channels),
     referrals = Collection(collection_name='referrals', model=Referrals),
-    adv=Collection(collection_name='adv', model=Adv)
+    adv=Collection(collection_name='adv', model=Adv),
+    referral_tracking=Collection(collection_name='referral_tracking', model=ReferralTracking)  # Новая коллекция
 )

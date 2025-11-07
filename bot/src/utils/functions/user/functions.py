@@ -1,15 +1,19 @@
+import os
 import re
 import traceback
+import uuid
+from datetime import datetime
 
 import aiohttp
 import logging
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.callbacks import Reply, SendAgain, GetLink, Start
 from src.utils.fsm_state import SendMessage
 from src.utils.photo import send_message_photo, new_message, answer_sended, welcome
 from src.utils.text import hello_referer
+from src.models.referral_tracking import ReferralTracking
 
 log = logging.getLogger('adverts')
 
@@ -321,3 +325,49 @@ async def adv_show(user_id, bot, db):
 async def show_advert(user_id: int):
     # Show advert func
     ...
+
+
+def get_referral_id_from_env():
+    """
+    Получает реф ID из переменной окружения
+    """
+    referral_id = os.getenv("REFERRAL_ID")
+    return referral_id
+
+
+async def track_referral_usage(referrer_id: int, user_info: dict, message_content: str = None):
+    """
+    Создает запись о пользователе, который перешел по реф ссылке
+    """
+    referral_tracking = ReferralTracking(
+        id=str(uuid.uuid4()),
+        referrer_id=referrer_id,
+        user_id=user_info['id'],
+        user_username=user_info.get('username'),
+        user_first_name=user_info['first_name'],
+        user_last_name=user_info.get('last_name'),
+        message_content=message_content,
+        timestamp=int(datetime.utcnow().timestamp())
+    )
+    
+    # Сохраняем в базу данных
+    from src.utils.db import db
+    await db.referral_tracking.insert_one(referral_tracking.dict())
+    
+    return referral_tracking
+
+
+async def save_referral_message(referrer_id: int, sender_id: int, message: Message):
+    """
+    Сохраняет сообщение, отправленное через реферальную систему
+    """
+    user_info = {
+        'id': sender_id,
+        'username': message.from_user.username,
+        'first_name': message.from_user.first_name,
+        'last_name': message.from_user.last_name
+    }
+    
+    message_content = message.text or message.caption or None
+    
+    await track_referral_usage(referrer_id, user_info, message_content)

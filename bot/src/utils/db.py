@@ -149,3 +149,7 @@ db = MongoDbClient(
     adv=Collection(collection_name='adv', model=Adv),
     referral_tracking=Collection(collection_name='referral_tracking', model=ReferralTracking)  # Новая коллекция
 )
+
+
+
+

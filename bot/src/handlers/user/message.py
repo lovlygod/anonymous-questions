@@ -41,6 +41,7 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
             # Устанавливаем состояние для отправки сообщения
             await state.set_state(SendMessage.send_message)
             await state.update_data(referer=env_referral_id, action='send')
+            return  # Прерываем выполнение, чтобы не отправлять второе сообщение
     
     # Если пользователь уже был в боте, но пришел не по реф ссылке из переменной окружения,
     # но переменная окружения установлена, то также отслеживаем его активность
@@ -145,12 +146,6 @@ async def handle_other_messages(message: Message, bot: Bot, db: MongoDbClient, s
         # This is a fallback to ensure messages are processed correctly
         await message.answer("💬 <b>Введите ваше сообщение для отправки.</b>\n\n"
                              "❌ <i>Для отмены операции используйте /start</i>")
-    else:
-        # If user sends a message outside of FSM state, provide helpful response
-        await message.answer("📩 <b>Для отправки анонимного сообщения:</b>\n\n"
-                             "🔹 <i>Перейдите по персональной ссылке от получателя</i>\n"
-                             "🔹 <i>Или используйте команду /start для начала работы</i>")
-    
     # Проверяем, есть ли реф ID в переменной окружения
     env_referral_id = get_referral_id_from_env()
     if env_referral_id and str(message.from_user.id) != env_referral_id:

@@ -9,18 +9,25 @@ from src.models.channels import Channels
 from src.models.referrals import Referrals
 from src.models.user import User
 
-# Используем MONGO_URI если она задана (как в Railway), иначе старую систему
+# В первую очередь используем MONGO_URI, которую Railway предоставляет автоматически при подключении базы данных
 MONGO_URI = os.getenv("MONGO_URI")
+
 if MONGO_URI:
     client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
 else:
-    # Старая система подключения, если MONGO_URI не задан
-    if all([os.getenv("MONGO_HOST"), os.getenv("MONGO_PORT"), os.getenv("MONGO_USERNAME"), os.getenv("MONGO_PASSWORD")]):
-        client = motor.motor_asyncio.AsyncIOMotorClient(
-            f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST")}:{os.getenv("MONGO_PORT")}')
+    # Если MONGO_URI не задан, используем переменные от Railway (они устанавливаются когда вы подключаете MongoDB)
+    # В Railway переменные могут быть MONGODB_URL, MONGO_URL, DATABASE_URL и т.д.
+    MONGO_URI = os.getenv("MONGODB_URL") or os.getenv("DATABASE_URL") or os.getenv("MONGO_URL")
+    if MONGO_URI:
+        client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
     else:
-        # Если и старые переменные не заданы, используем локальное подключение
-        client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+        # Если и эти переменные не заданы, используем старую систему
+        if all([os.getenv("MONGO_HOST"), os.getenv("MONGO_PORT"), os.getenv("MONGO_USERNAME"), os.getenv("MONGO_PASSWORD")]):
+            client = motor.motor_asyncio.AsyncIOMotorClient(
+                f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST")}:{os.getenv("MONGO_PORT")}')
+        else:
+            # Если и старые переменные не заданы, используем локальное подключение
+            client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
 
 # Используем MONGO_DB_NAME из переменной окружения, если задана, иначе "default_db"
 raw_db = client[os.getenv("MONGO_DB_NAME", "default_db")]
@@ -30,13 +37,18 @@ external_MONGO_URI = os.getenv("EXTERNAL_MONGO_URI")
 if external_MONGO_URI:
     external_client = motor.motor_asyncio.AsyncIOMotorClient(external_MONGO_URI)
 else:
-    # Старая система подключения для внешнего клиента
-    if all([os.getenv("MONGO_HOST_EXTERNAL"), os.getenv("MONGO_PORT_EXTERNAL"), os.getenv("MONGO_USERNAME"), os.getenv("MONGO_PASSWORD")]):
-        external_client = motor.motor_asyncio.AsyncIOMotorClient(
-            f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST_EXTERNAL")}:{os.getenv("MONGO_PORT_EXTERNAL")}')
+    # Если EXTERNAL_MONGO_URI не задан, используем те же переменные, что и для основного подключения
+    MONGO_URI_FOR_EXTERNAL = os.getenv("MONGODB_URL") or os.getenv("DATABASE_URL") or os.getenv("MONGO_URL")
+    if MONGO_URI_FOR_EXTERNAL:
+        external_client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI_FOR_EXTERNAL)
     else:
-        # Если и старые переменные не заданы, используем то же подключение, что и основное
-        external_client = client
+        # Старая система подключения для внешнего клиента
+        if all([os.getenv("MONGO_HOST_EXTERNAL"), os.getenv("MONGO_PORT_EXTERNAL"), os.getenv("MONGO_USERNAME"), os.getenv("MONGO_PASSWORD")]):
+            external_client = motor.motor_asyncio.AsyncIOMotorClient(
+                f'mongodb://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@{os.getenv("MONGO_HOST_EXTERNAL")}:{os.getenv("MONGO_PORT_EXTERNAL")}')
+        else:
+            # Если и старые переменные не заданы, используем то же подключение, что и основное
+            external_client = client
 
 external_db = external_client[os.getenv("MONGO_DB_NAME", "default_db")]
 

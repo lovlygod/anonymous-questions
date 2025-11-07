@@ -31,7 +31,9 @@ async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbCli
         # Delete the original message
         await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
         # Send a new message asking the user to enter their reply
-        mes = await bot.send_message(chat_id=callback_query.from_user.id, text='Введите ваше сообщение:')
+        mes = await bot.send_message(chat_id=callback_query.from_user.id, 
+                                    text='💬 <b>Введите ваше сообщение:</b>\n\n'
+                                         '🔹 <i>Это сообщение будет отправлено анонимно</i>')
         # Set the FSM state to SendMessage.send_message
         await state.set_state(SendMessage.send_message)
         # Update the FSM context with relevant data
@@ -67,20 +69,20 @@ async def get_link(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, c
             if callback_query.message.caption or callback_query.message.photo:
                 await bot.edit_message_caption(chat_id=callback_query.from_user.id,
                                                message_id=callback_query.message.message_id,
-                                               caption=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                               caption=f"🔗 <b>Вот ваша персональная ссылка:</b>\n\n"
                                                        f"🔗 <code>https://t.me/{me.username}"
                                                        f"?start={callback_query.from_user.id}"
                                                        f"</code>\n\n"
-                                                       f"Делитесь ей и получайте анонимные сообщения")  # No keyboard
+                                                       f"💌 <i>Делитесь ей и получайте анонимные сообщения!</i>")
             else:
                 # Если сообщение не содержит подпись, редактируем текст
                 await bot.edit_message_text(chat_id=callback_query.from_user.id,
                                             message_id=callback_query.message.message_id,
-                                            text=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                            text=f"🔗 <b>Вот ваша персональная ссылка:</b>\n\n"
                                                  f"🔗 <code>https://t.me/{me.username}"
                                                  f"?start={callback_query.from_user.id}"
                                                  f"</code>\n\n"
-                                                 f"Делитесь ей и получайте анонимные сообщения")  # No keyboard
+                                                 f"💌 <i>Делитесь ей и получайте анонимные сообщения!</i>")
         else:
             keyboard_sender = InlineKeyboardBuilder()
             keyboard_sender.row(InlineKeyboardButton(text='Send again',
@@ -90,21 +92,21 @@ async def get_link(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient, c
             if callback_query.message.caption or callback_query.message.photo:
                 await bot.edit_message_caption(chat_id=callback_query.from_user.id,
                                                message_id=callback_query.message.message_id,
-                                               caption=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                               caption=f"🔗 <b>Вот ваша персональная ссылка:</b>\n\n"
                                                        f"🔗 <code>https://t.me/{me.username}"
                                                        f"?start={callback_query.from_user.id}"
                                                        f"</code>\n\n"
-                                                       f"Делитесь ей и получайте анонимные сообщения",
+                                                       f"💌 <i>Делитесь ей и получайте анонимные сообщения!</i>",
                                                reply_markup=keyboard_sender.as_markup())
             else:
                 # Если сообщение не содержит подпись, редактируем текст
                 await bot.edit_message_text(chat_id=callback_query.from_user.id,
                                             message_id=callback_query.message.message_id,
-                                            text=f"🔗 Вот ваша персональная ссылка:\n\n"
+                                            text=f"🔗 <b>Вот ваша персональная ссылка:</b>\n\n"
                                                  f"🔗 <code>https://t.me/{me.username}"
                                                  f"?start={callback_query.from_user.id}"
                                                  f"</code>\n\n"
-                                                 f"Делитесь ей и получайте анонимные сообщения",
+                                                 f"💌 <i>Делитесь ей и получайте анонимные сообщения!</i>",
                                             reply_markup=keyboard_sender.as_markup())
     else:
         # If not subscribed, prompt the user to subscribe
@@ -135,7 +137,9 @@ async def send_again(callback_query: CallbackQuery, bot: Bot, db: MongoDbClient,
         await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id)
 
         # Send a new message asking the user to enter their reply
-        mes = await bot.send_message(chat_id=callback_query.from_user.id, text='Введите ваше сообщение:')
+        mes = await bot.send_message(chat_id=callback_query.from_user.id, 
+                                    text='💬 <b>Введите ваше сообщение:</b>\n\n'
+                                         '🔹 <i>Это сообщение будет отправлено анонимно</i>')
         # Set the FSM state to SendMessage.send_message
         await state.set_state(SendMessage.send_message)
         # Update the FSM context with relevant data

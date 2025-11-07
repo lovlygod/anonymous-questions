@@ -82,7 +82,7 @@ async def reply_action(message, bot, state, data: dict, referer: int, sender: in
         await bot.send_photo(chat_id=int(sender), photo=new_message,
                              caption='<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
                                      f'<i>{message.text}</i>\n\n'
-                                     '<b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
+                                     '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
                              parse_mode='html', reply_markup=keyboard_sender.as_markup())
     else:
         # Если нет фото, отправим текстовое сообщение с объединенным контентом
@@ -91,8 +91,8 @@ async def reply_action(message, bot, state, data: dict, referer: int, sender: in
             combined_text += f'<i>{message.text}</i>\n\n'
         elif message.caption:
             combined_text += f'<i>{message.caption}</i>\n\n'
-        combined_text += '<b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
-            
+        combined_text += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+        
         await bot.send_message(chat_id=int(sender),
                                text=combined_text,
                                parse_mode='html', reply_markup=keyboard_sender.as_markup())
@@ -106,7 +106,6 @@ async def reply_action(message, bot, state, data: dict, referer: int, sender: in
         await bot.send_message(chat_id=message.from_user.id,
                                text='<b>📨 Ваш ответ был успешно отправлен!</b>',
                                parse_mode='html', reply_markup=keyboard_referer.as_markup())
-
 
 
 # Function for send action
@@ -132,7 +131,7 @@ async def send_action(message, bot, state, data: dict, referer: int):
             caption_text += f'<i>{message.text}</i>\n\n'
         elif message.caption:
             caption_text += f'<i>{message.caption}</i>\n\n'
-        caption_text += '<b>Можете ответить на это сообщение!</b>'
+        caption_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
         
         await bot.send_photo(chat_id=int(referer), photo=new_message,
                              caption=caption_text,
@@ -144,7 +143,7 @@ async def send_action(message, bot, state, data: dict, referer: int):
             combined_text += f'<i>{message.text}</i>\n\n'
         elif message.caption:
             combined_text += f'<i>{message.caption}</i>\n\n'
-        combined_text += '<b>Можете ответить на это сообщение!</b>'
+        combined_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
         
         await bot.send_message(chat_id=int(referer),
                                text=combined_text,
@@ -154,18 +153,32 @@ async def send_action(message, bot, state, data: dict, referer: int):
     if send_message_photo:
         await bot.send_photo(chat_id=message.from_user.id, photo=send_message_photo,
                              caption='<b>✅ Ваше анонимное сообщение было успешно отправлено!</b>\n\n'
-                                     '<b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
+                                     '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
                              parse_mode='html', reply_markup=keyboard_sender.as_markup())
     else:
         await bot.send_message(chat_id=message.from_user.id,
                                text='<b>✅ Ваше анонимное сообщение было успешно отправлено!</b>\n\n'
-                                    '<b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
+                                    '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
                                parse_mode='html', reply_markup=keyboard_sender.as_markup())
+
 
 # Function to start with referral link
 async def start_with_referer(message, bot, state, text):
     if message.from_user.id != int(text.split('/start ')[1]):
-        res = await bot.send_message(chat_id=message.from_user.id, text=hello_referer)
+        # Send a welcome message that the user has come via referral link
+        me = await bot.get_me()
+        personal_link = f"https://t.me/{me.username}?start={message.from_user.id}"
+        
+        welcome_text = (
+            "🎉 <b>Добро пожаловать в бот анонимных вопросов!</b>\n\n"
+            "💬 <b>Вы перешли по чужой ссылке и можете отправить анонимное сообщение.</b>\n\n"
+            "💌 <i>После отправки вашего сообщения, вы также сможете получить персональную ссылку для получения анонимных вопросов</i>"
+        )
+                
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться своей ссылкой', switch_inline_query=personal_link))
+                
+        res = await bot.send_message(chat_id=message.from_user.id, text=welcome_text, reply_markup=keyboard.as_markup())
         await state.set_state(SendMessage.send_message)
         await state.update_data(referer=text.split('/start ')[1], action='send', message_id=res.message_id)
 
@@ -173,16 +186,29 @@ async def start_with_referer(message, bot, state, text):
 # Function to start without referral link
 async def start_without_referer(message, bot, state):
     me = await bot.get_me()
+    personal_link = f"https://t.me/{me.username}?start={message.from_user.id}"
+    
+    welcome_text = (
+        "🎉 <b>Добро пожаловать в бот анонимных вопросов!</b>\n\n"
+        "💬 <b>Начните получать анонимные вопросы прямо сейчас!</b>\n\n"
+        f"👉 <code>t.me/{me.username}?start={message.from_user.id}</code>\n\n"
+        "💌 <i>Разместите эту ссылку ☝️ в описании своего профиля Telegram, TikTok, Instagram (stories), чтобы вам могли написать</i>"
+    )
+    
     if welcome:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
+        
         await bot.send_photo(chat_id=message.from_user.id, photo=welcome,
-                             caption=f"🔗 Вот ваша персональная ссылка:\n\n"
-                                     f"🔗 <code>https://t.me/{me.username}?start={message.from_user.id}</code>\n\n"
-                                     f"Опубликуйте её и получайте анонимные сообщения")
+                             caption=welcome_text,
+                             reply_markup=keyboard.as_markup())
     else:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
+        
         await bot.send_message(chat_id=message.from_user.id,
-                               text=f"🔗 Вот ваша персональная ссылка:\n\n"
-                                    f"🔗 <code>https://t.me/{me.username}?start={message.from_user.id}</code>\n\n"
-                                    f"Опубликуйте её и получайте анонимные сообщения")
+                               text=welcome_text,
+                               reply_markup=keyboard.as_markup())
 
 
 # Function to check if the URL is a bot link
@@ -211,17 +237,19 @@ async def not_subscribe(bot, user_id, channels_list, callback, message_id):
     markup = InlineKeyboardBuilder()
     for channel in channels_list:
         markup.row(InlineKeyboardButton(text=channel['name'], url=channel['url'].replace(';', ':')))
-    markup.row(InlineKeyboardButton(text='✅ Check Subscription', callback_data=callback))
+    markup.row(InlineKeyboardButton(text='✅ Проверить подписку', callback_data=callback))
     try:
         if message_id is not None:
             await bot.edit_message_caption(chat_id=user_id, message_id=message_id,
-                                           caption="Чтобы использовать бота, подпишитесь на наших спонсоров:",
+                                           caption="🤖 <b>Чтобы использовать бота, подпишитесь на наших спонсоров:</b>\n\n"
+                                                   "🔹 <i>Это необходимо для поддержки проекта</i>",
                                            reply_markup=markup.as_markup())
         else:
             print('Failed to check subscription')
     except:
         await bot.send_message(chat_id=user_id,
-                               text="Чтобы использовать бота, подпишитесь на наших спонсоров:",
+                               text="🤖 <b>Чтобы использовать бота, подпишитесь на наших спонсоров:</b>\n\n"
+                                    "🔹 <i>Это необходимо для поддержки проекта</i>",
                                reply_markup=markup.as_markup())
 
 

@@ -2,6 +2,8 @@ from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
 from src.utils.db import MongoDbClient
 from src.utils.fsm_state import SendMessage
 from src.utils.functions.user.functions import (send_message_with_referer, adv_show, show_advert, handle_start,
@@ -23,6 +25,23 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
         await handle_start(message, bot, db, state, split_message)
     else:
         await handle_subscription_check(bot, message, db, state, split_message)
+    
+    # Send welcome message with share button
+    me = await bot.get_me()
+    personal_link = f"https://t.me/{me.username}?start={message.from_user.id}"
+    
+    welcome_text = (
+        "🎉 <b>Добро пожаловать в бот анонимных вопросов!</b>\n\n"
+        "💬 <b>Начните получать анонимные вопросы прямо сейчас!</b>\n\n"
+        f"👉 <code>t.me/{me.username}?start={message.from_user.id}</code>\n\n"
+        "💌 <i>Разместите эту ссылку ☝️ в описании своего профиля Telegram, TikTok, Instagram (stories), чтобы вам могли написать</i>"
+    )
+    
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', switch_inline_query=personal_link))
+    
+    await message.answer(welcome_text, reply_markup=keyboard.as_markup())
+    
     # Show advertisement
     await show_advert(message.from_user.id)
     await adv_show(message.from_user.id, bot, db)
@@ -47,7 +66,8 @@ async def send_message(message: Message, bot: Bot, db: MongoDbClient, state: FSM
     if message.text and message.text.startswith('/'):
         # This is a command, clear the state and ignore
         await state.clear()
-        await message.answer("Команды недоступны в режиме отправки сообщения. Команда отменена.")
+        await message.answer("❌ <b>Команды недоступны в режиме отправки сообщения.</b>\n\n"
+                             "✅ <i>Операция отправки сообщения отменена.</i>")
         return
     
     # Get the FSM context data
@@ -60,7 +80,8 @@ async def send_message(message: Message, bot: Bot, db: MongoDbClient, state: FSM
         )
     else:
         # If there is no referer, send an error message
-        await message.answer("❗️ Unable to send message, referer is missing.")
+        await message.answer("❗️ <b>Не удалось отправить сообщение.</b>\n\n"
+                             "ℹ️ <i>Отсутствует получатель. Попробуйте начать сначала.</i>")
     # Show advertisement
     await show_advert(message.from_user.id)
     await adv_show(message.from_user.id, bot, db)
@@ -74,10 +95,13 @@ async def handle_commands(message: Message, bot: Bot, db: MongoDbClient, state: 
     # If user sends a command but it's not handled by other handlers, provide helpful response
     current_state = await state.get_state()
     if current_state != SendMessage.send_message:
-        await message.answer("Неизвестная команда. Используйте /start для начала работы с ботом.")
+        await message.answer("🤖 <b>Неизвестная команда.</b>\n\n"
+                             "💡 <i>Используйте /start для начала работы с ботом.</i>")
     else:
         # If user is in FSM state, ignore the command
-        await message.answer("Команды недоступны в режиме отправки сообщения.")
+        await message.answer("❌ <b>Команды недоступны в режиме отправки сообщения.</b>\n\n"
+                             "ℹ️ <i>Пожалуйста, завершите текущую операцию или используйте /start для отмены.</i>")
+
 
 # Handle all other messages when not in FSM state - provide helpful response
 @router.message()
@@ -87,7 +111,10 @@ async def handle_other_messages(message: Message, bot: Bot, db: MongoDbClient, s
     if current_state == SendMessage.send_message:
         # If user is in message sending state, this will be handled by send_message handler
         # This is a fallback to ensure messages are processed correctly
-        await message.answer("Пожалуйста, завершите текущую операцию или используйте /start для отмены.")
+        await message.answer("💬 <b>Введите ваше сообщение для отправки.</b>\n\n"
+                             "❌ <i>Для отмены операции используйте /start</i>")
     else:
         # If user sends a message outside of FSM state, provide helpful response
-        await message.answer("Для отправки анонимного сообщения перейдите по персональной ссылке или используйте /start")
+        await message.answer("📩 <b>Для отправки анонимного сообщения:</b>\n\n"
+                             "🔹 <i>Перейдите по персональной ссылке от получателя</i>\n"
+                             "🔹 <i>Или используйте команду /start для начала работы</i>")

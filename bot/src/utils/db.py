@@ -58,7 +58,8 @@ external_db = external_client[os.getenv("MONGO_DB_NAME", "default_db")]
 class Collection:
 
     def __init__(self, model, collection_name: str):
-        self.collection = client[os.getenv("MONGO_DB_NAME")][collection_name]
+        db_name = os.getenv("MONGO_DB_NAME", "default_db")
+        self.collection = client[db_name][collection_name]
         self.model = model
 
     async def find_one(self, f: dict):

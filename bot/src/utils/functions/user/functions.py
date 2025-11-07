@@ -75,16 +75,27 @@ async def reply_action(message, bot, state, data: dict, referer: int, sender: in
     keyboard_sender = InlineKeyboardBuilder()
     keyboard_sender.row(
         InlineKeyboardButton(text='Get Link', callback_data=GetLink(referer=int(referer), check_my=False).pack()))
-    await bot.send_photo(chat_id=int(sender), photo=new_message,
-                         caption='<b>📬 Reply to your question</b>\n\n'
-                                 '<b>Want to receive anonymous messages too? Click ⬇️</b>',
-                         parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    if new_message:
+        await bot.send_photo(chat_id=int(sender), photo=new_message,
+                             caption='<b>📬 Reply to your question</b>\n\n'
+                                     '<b>Want to receive anonymous messages too? Click ⬇️</b>',
+                             parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    else:
+        await bot.send_message(chat_id=int(sender),
+                               text='<b>📬 Reply to your question</b>\n\n'
+                                    '<b>Want to receive anonymous messages too? Click ⬇️</b>',
+                               parse_mode='html', reply_markup=keyboard_sender.as_markup())
     await bot.forward_message(chat_id=int(sender), from_chat_id=message.from_user.id,
                               message_id=int(data.get('reply_message')))
     await bot.copy_message(chat_id=int(sender), from_chat_id=message.from_user.id, message_id=message.message_id)
-    await bot.send_photo(chat_id=message.from_user.id, photo=answer_sended,
-                         caption='<b>📨 Your reply has been sent!</b>',
-                         parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    if answer_sended:
+        await bot.send_photo(chat_id=message.from_user.id, photo=answer_sended,
+                             caption='<b>📨 Your reply has been sent!</b>',
+                             parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    else:
+        await bot.send_message(chat_id=message.from_user.id,
+                               text='<b>📨 Your reply has been sent!</b>',
+                               parse_mode='html', reply_markup=keyboard_referer.as_markup())
 
 
 # Function for send action
@@ -101,12 +112,22 @@ async def send_action(message, bot, state, data: dict, referer: int):
                                               callback_data=Reply(sender=int(message.from_user.id), action='reply',
                                                                   referer=int(referer),
                                                                   reply_message=reply_message.message_id).pack()))
-    await bot.send_photo(chat_id=int(referer), photo=new_message,
-                         caption='<b>📨 New message from anonymous:</b>',
-                         parse_mode='html', reply_markup=keyboard_referer.as_markup())
-    await bot.send_photo(chat_id=message.from_user.id, photo=send_message_photo,
-                         caption='<b>Want to receive anonymous messages too? Click ⬇️</b>',
-                         parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    if new_message:
+        await bot.send_photo(chat_id=int(referer), photo=new_message,
+                             caption='<b>📨 New message from anonymous:</b>',
+                             parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    else:
+        await bot.send_message(chat_id=int(referer),
+                               text='<b>📨 New message from anonymous:</b>',
+                               parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    if send_message_photo:
+        await bot.send_photo(chat_id=message.from_user.id, photo=send_message_photo,
+                             caption='<b>Want to receive anonymous messages too? Click ⬇️</b>',
+                             parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    else:
+        await bot.send_message(chat_id=message.from_user.id,
+                               text='<b>Want to receive anonymous messages too? Click ⬇️</b>',
+                               parse_mode='html', reply_markup=keyboard_sender.as_markup())
 
 
 # Function to start with referral link
@@ -120,10 +141,16 @@ async def start_with_referer(message, bot, state, text):
 # Function to start without referral link
 async def start_without_referer(message, bot, state):
     me = await bot.get_me()
-    await bot.send_photo(chat_id=message.from_user.id, photo=welcome,
-                         caption=f"🔗 Here is your personal link:\n\n"
-                                 f"🔗 <code>https://t.me/{me.username}?start={message.from_user.id}</code>\n\n"
-                                 f"Publish it and receive anonymous messages")
+    if welcome:
+        await bot.send_photo(chat_id=message.from_user.id, photo=welcome,
+                             caption=f"🔗 Here is your personal link:\n\n"
+                                     f"🔗 <code>https://t.me/{me.username}?start={message.from_user.id}</code>\n\n"
+                                     f"Publish it and receive anonymous messages")
+    else:
+        await bot.send_message(chat_id=message.from_user.id,
+                               text=f"🔗 Here is your personal link:\n\n"
+                                    f"🔗 <code>https://t.me/{me.username}?start={message.from_user.id}</code>\n\n"
+                                    f"Publish it and receive anonymous messages")
 
 
 # Function to check if the URL is a bot link

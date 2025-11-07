@@ -1,6 +1,6 @@
-welcome = 'url'
-new_message = 'url'
-sended = 'url'
-answer_sended = 'url'
-send_message_photo = 'url'
-no_photo = 'url'
+welcome = None
+new_message = None
+sended = None
+answer_sended = None
+send_message_photo = None
+no_photo = None

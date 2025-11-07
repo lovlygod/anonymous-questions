@@ -8,6 +8,7 @@ from src.utils.db import MongoDbClient
 from src.utils.fsm_state import SendMessage
 from src.utils.functions.user.functions import (send_message_with_referer, adv_show, show_advert, handle_start,
                                                 handle_subscription_check, get_referral_id_from_env, track_referral_usage)
+from src.utils.text import hello_referer
 
 router = Router()
 
@@ -34,6 +35,11 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
                 'last_name': message.from_user.last_name
             }
             await track_referral_usage(int(env_referral_id), user_info)
+            # Отправляем специальное сообщение пользователю, который пришел по реф ссылке
+            await message.answer(hello_referer, parse_mode='html')
+            # Устанавливаем состояние для отправки сообщения
+            await state.set_state(SendMessage.send_message)
+            await state.update_data(referer=env_referral_id, action='send')
     
     if user.first_start:
         # If this is the user's first start, update the database

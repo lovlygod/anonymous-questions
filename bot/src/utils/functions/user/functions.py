@@ -3,6 +3,7 @@ import re
 import traceback
 import uuid
 from datetime import datetime
+import time
 
 import aiohttp
 import logging
@@ -14,6 +15,7 @@ from src.utils.fsm_state import SendMessage
 from src.utils.photo import send_message_photo, new_message, answer_sended, welcome
 from src.utils.text import hello_referer
 from src.models.referral_tracking import ReferralTracking
+from src.utils.logger import perf_logger
 
 log = logging.getLogger('adverts')
 
@@ -268,49 +270,82 @@ async def not_subscribe(bot, user_id, channels_list, callback, message_id):
 
 # Function to increment subscription count for sponsor channels
 async def plus_sub(channels_list, db, user_id):
+    import time
+    start_time = time.time()
+    
+    # Подготовим bulk операции для обновления каналов
+    bulk_operations = []
+    
     for channel in channels_list:
-        current_channel = await db.channels.find_one({'channel_id': channel['channel_id']})
-        if current_channel.subscribed_users:
-            if user_id not in current_channel.subscribed_users:
-                current_subs = current_channel.subs
-                print(current_subs)
-                current_channel.subscribed_users.append(user_id)
-                print(current_channel.subscribed_users)
-                new_subs = int(current_subs) + 1
-                await db.channels.update_one(
-                    {'channel_id': channel['channel_id']},
-                    {'subs': new_subs, 'subscribed_users': current_channel.subscribed_users}
-                )
-            else:
-                pass
-        else:
-            current_subs = current_channel.subs
-            users_list = [user_id]
-            new_subs = int(current_subs) + 1
-            await db.channels.update_one(
-                {'channel_id': channel['channel_id']},
-                {'subs': new_subs, 'subscribed_users': users_list}
-            )
+        # Используем update_one с upsert=False и применяем операции атомарно
+        update_operation = {
+            'filter': {'channel_id': channel['channel_id']},
+            'update': {
+                '$inc': {'subs': 1},  # Увеличиваем счетчик подписчиков
+                '$addToSet': {'subscribed_users': user_id} # Добавляем пользователя в список, если его там еще нет
+            }
+        }
+        bulk_operations.append(update_operation)
+    
+    # Выполняем bulk операции
+    for operation in bulk_operations:
+        await db.channels.update_one(operation['filter'], operation['update'])
+    
+    # Логируем операцию
+    perf_logger.log_db_operation("plus_sub_bulk_update", "channels", time.time() - start_time, len(bulk_operations))
 
 
 # Function to show advertisement to user
-
 async def adv_show(user_id, bot, db):
-    user_query = await db.users.find_one({'id': int(user_id)})
-    adv_user_shows = int(user_query.adv_id)
+    start_time = time.time()
+    
+    # Используем Redis кэш для хранения adv_id пользователя
+    from src.utils.redis_cache import RedisCache
+    cache = RedisCache()
+    
+    # Попробуем получить adv_id из кэша
+    cached_adv_id = await cache.get(f"user_adv_id_{user_id}")
+    
+    if cached_adv_id is not None:
+        adv_user_shows = cached_adv_id
+    else:
+        # Если в кэше нет, получаем из базы данных
+        user_query = await db.users.find_one({'id': int(user_id)})
+        if not user_query:
+            perf_logger.log_db_operation("find_one", "users", time.time() - start_time, success=False)
+            return # Если пользователь не найден, выходим
+        
+        adv_user_shows = int(user_query.adv_id)
+        # Сохраняем в кэш на 1 час
+        await cache.set(f"user_adv_id_{user_id}", adv_user_shows, 3600)
+    
+    # Получаем рекламный пост из базы данных
+    adv_start_time = time.time()
     if adv_user_shows != 1:
         adv_query = await db.adv.find_one({'adv_id': adv_user_shows})
     else:
         adv_query = await db.adv.find_one_with_min_adv_id()
-    try:
-        next_adv_query = await db.adv.find_one_with_next_adv_id(adv_query.adv_id)
-        await db.users.update_one({'id': int(user_id)},
-                                  {'adv_id': int(next_adv_query.adv_id)})
-    except:
-        adv_id = 1
-        await db.users.update_one({'id': int(user_id)},
-                                  {'adv_id': adv_id})
+    
+    perf_logger.log_db_operation("find_one/find_one_with_min_adv_id", "adv", time.time() - adv_start_time)
+    
     if adv_query:
+        # Получаем следующий рекламный пост
+        next_adv_start_time = time.time()
+        next_adv_query = await db.adv.find_one_with_next_adv_id(adv_query.adv_id)
+        perf_logger.log_db_operation("find_one_with_next_adv_id", "adv", time.time() - next_adv_start_time)
+        
+        if next_adv_query:
+            new_adv_id = int(next_adv_query.adv_id)
+        else:
+            new_adv_id = 1  # Если следующего поста нет, возвращаемся к первому
+        
+        # Обновляем adv_id пользователя в базе данных и в кэше
+        update_start_time = time.time()
+        await db.users.update_one({'id': int(user_id)}, {'adv_id': new_adv_id})
+        perf_logger.log_db_operation("update_one", "users", time.time() - update_start_time)
+        
+        await cache.set(f"user_adv_id_{user_id}", new_adv_id, 3600)
+        
         kwargs = {'caption': adv_query.caption} if adv_query.caption else {}
         if adv_query.content_type == 'photo':
             await bot.send_photo(user_id, photo=adv_query.content, **kwargs, parse_mode='html')
@@ -320,6 +355,8 @@ async def adv_show(user_id, bot, db):
             await bot.send_document(user_id, document=adv_query.content, **kwargs, parse_mode='html')
         elif adv_query.content_type == 'text':
             await bot.send_message(user_id, text=adv_query.content, parse_mode='html')
+    
+    perf_logger.log_db_operation("adv_show_total", "performance", time.time() - start_time)
 
 
 async def show_advert(user_id: int):
@@ -351,7 +388,7 @@ async def track_referral_usage(referrer_id: int, user_info: dict, message_conten
     )
     
     # Сохраняем в базу данных
-    from src.utils.db import db
+    from src.utils.db import db  # Импорт в глобальной области видимости для избежания циклических зависимостей
     await db.referral_tracking.insert_one(referral_tracking.dict())
     
     return referral_tracking

@@ -497,6 +497,9 @@ async def track_referral_usage(referrer_id: int, user_info: dict, message_conten
     """
     Создает запись о пользователе, который перешел по реф ссылке
     """
+    # Логируем информацию для отладки
+    print(f"Tracking referral usage: referrer_id={referrer_id}, user_id={user_info['id']}, message_content={message_content}")
+    
     referral_tracking = ReferralTracking(
         id=str(uuid.uuid4()),
         referrer_id=referrer_id,
@@ -510,7 +513,11 @@ async def track_referral_usage(referrer_id: int, user_info: dict, message_conten
     
     # Сохраняем в базу данных
     from src.utils.db import db  # Импорт в глобальной области видимости для избежания циклических зависимостей
-    await db.referral_tracking.insert_one(referral_tracking.dict())
+    try:
+        result = await db.referral_tracking.insert_one(referral_tracking.dict())
+        print(f"Referral tracking record inserted with ID: {result.inserted_id}")
+    except Exception as e:
+        print(f"Error inserting referral tracking record: {e}")
     
     return referral_tracking
 

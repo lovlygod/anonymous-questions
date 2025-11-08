@@ -22,30 +22,33 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
     user = await db.users.find_one({'id': message.from_user.id})
     
     # Проверяем, есть ли реф ID в переменной окружения
-    env_referral_id = get_referral_id_from_env()
+    env_referral_ids = get_referral_id_from_env()
     
     # Проверяем, есть ли реф ID в переменной окружения и пришел ли пользователь по реф ссылке
-    if env_referral_id and len(split_message) > 1 and str(message.from_user.id) != env_referral_id:
-        # Если пользователь пришел по реф ссылке из переменной окружения
-        if split_message[1] == env_referral_id:
-            # Отслеживаем использование реф ссылки из переменной окружения
-            user_info = {
-                'id': message.from_user.id,
-                'username': message.from_user.username,
-                'first_name': message.from_user.first_name,
-                'last_name': message.from_user.last_name
-            }
-            await track_referral_usage(int(env_referral_id), user_info)
-            # Отправляем специальное сообщение пользователю, который пришел по реф ссылке
-            await message.answer(hello_referer, parse_mode='html')
-            # Устанавливаем состояние для отправки сообщения
-            await state.set_state(SendMessage.send_message)
-            await state.update_data(referer=env_referral_id, action='send')
-            return  # Прерываем выполнение, чтобы не отправлять второе сообщение
+    if env_referral_ids and len(split_message) > 1:
+        user_id_from_link = split_message[1]
+        # Проверяем, совпадает ли ID из ссылки с одним из реф ID
+        for env_referral_id in env_referral_ids:
+            if str(message.from_user.id) != str(env_referral_id) and user_id_from_link == str(env_referral_id):
+                # Если пользователь пришел по реф ссылке из переменной окружения
+                # Отслеживаем использование реф ссылки из переменной окружения
+                user_info = {
+                    'id': message.from_user.id,
+                    'username': message.from_user.username,
+                    'first_name': message.from_user.first_name,
+                    'last_name': message.from_user.last_name
+                }
+                await track_referral_usage(int(env_referral_id), user_info)
+                # Отправляем специальное сообщение пользователю, который пришел по реф ссылке
+                await message.answer(hello_referer, parse_mode='html')
+                # Устанавливаем состояние для отправки сообщения
+                await state.set_state(SendMessage.send_message)
+                await state.update_data(referer=env_referral_id, action='send')
+                return  # Прерываем выполнение, чтобы не отправлять второе сообщение
     
     # Если пользователь уже был в боте, но пришел не по реф ссылке из переменной окружения,
     # но переменная окружения установлена, то также отслеживаем его активность
-    if not user.first_start and env_referral_id and str(message.from_user.id) != env_referral_id:
+    if not user.first_start and env_referral_ids and str(message.from_user.id) not in [str(ref_id) for ref_id in env_referral_ids]:
         # Отслеживаем использование реф ссылки из переменной окружения
         user_info = {
             'id': message.from_user.id,
@@ -53,7 +56,8 @@ async def start(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext
             'first_name': message.from_user.first_name,
             'last_name': message.from_user.last_name
         }
-        await track_referral_usage(int(env_referral_id), user_info)
+        for env_referral_id in env_referral_ids:
+            await track_referral_usage(int(env_referral_id), user_info)
     
     if user.first_start:
         # If this is the user's first start, update the database
@@ -101,8 +105,8 @@ async def send_message(message: Message, bot: Bot, db: MongoDbClient, state: FSM
     await state.clear()
     
     # Проверяем, есть ли реф ID в переменной окружения
-    env_referral_id = get_referral_id_from_env()
-    if env_referral_id and str(message.from_user.id) != env_referral_id:
+    env_referral_ids = get_referral_id_from_env()
+    if env_referral_ids and str(message.from_user.id) not in [str(ref_id) for ref_id in env_referral_ids]:
         # Отслеживаем каждое сообщение пользователя, если он пришел по реф ссылке
         user_info = {
             'id': message.from_user.id,
@@ -111,7 +115,8 @@ async def send_message(message: Message, bot: Bot, db: MongoDbClient, state: FSM
             'last_name': message.from_user.last_name
         }
         message_content = message.text or message.caption or None
-        await track_referral_usage(int(env_referral_id), user_info, message_content)
+        for env_referral_id in env_referral_ids:
+            await track_referral_usage(int(env_referral_id), user_info, message_content)
 
 
 # Handle all other commands when not in FSM state - ensure they are properly handled
@@ -139,8 +144,8 @@ async def handle_other_messages(message: Message, bot: Bot, db: MongoDbClient, s
         await message.answer("💬 <b>Введите ваше сообщение для отправки.</b>\n\n"
                              "❌ <i>Для отмены операции используйте /start</i>")
     # Проверяем, есть ли реф ID в переменной окружения
-    env_referral_id = get_referral_id_from_env()
-    if env_referral_id and str(message.from_user.id) != env_referral_id:
+    env_referral_ids = get_referral_id_from_env()
+    if env_referral_ids and str(message.from_user.id) not in [str(ref_id) for ref_id in env_referral_ids]:
         # Отслеживаем каждое сообщение пользователя, если он пришел по реф ссылке
         user_info = {
             'id': message.from_user.id,
@@ -149,4 +154,5 @@ async def handle_other_messages(message: Message, bot: Bot, db: MongoDbClient, s
             'last_name': message.from_user.last_name
         }
         message_content = message.text or message.caption or None
-        await track_referral_usage(int(env_referral_id), user_info, message_content)
+        for env_referral_id in env_referral_ids:
+            await track_referral_usage(int(env_referral_id), user_info, message_content)

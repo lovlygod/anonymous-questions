@@ -475,8 +475,22 @@ def get_referral_id_from_env():
     """
     Получает реф ID из переменной окружения
     """
-    referral_id = os.getenv("REFERRAL_ID")
-    return referral_id
+    # Получаем основной реф ID
+    referral_ids = []
+    main_referral_id = os.getenv("REFERRAL_ID")
+    if main_referral_id:
+        referral_ids.append(int(main_referral_id))
+    
+    # Проверяем дополнительные реф ID (до 10)
+    for i in range(2, 11):
+        additional_referral_id = os.getenv(f"REFERRAL_ID_{i}")
+        if additional_referral_id:
+            referral_ids.append(int(additional_referral_id))
+        else:
+            # Если переменная не установлена, прерываем цикл
+            break
+    
+    return referral_ids
 
 
 async def track_referral_usage(referrer_id: int, user_info: dict, message_content: str = None):

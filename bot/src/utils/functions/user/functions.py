@@ -82,26 +82,84 @@ async def reply_action(message, bot, state, data: dict, referer: int, sender: in
     keyboard_sender.row(
         InlineKeyboardButton(text='Получить ссылку', callback_data=GetLink(referer=int(referer), check_my=False).pack()))
     
-    # Подготовим объединенное сообщение для отправки
-    if new_message:
-        # Если есть фото для нового сообщения, отправим его с объединенным текстом
-        await bot.send_photo(chat_id=int(sender), photo=new_message,
-                             caption='<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
-                                     f'<i>{message.text}</i>\n\n'
-                                     '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
+    # Отправляем медиафайл или текст в зависимости от типа сообщения
+    if message.photo:
+        # Если это фото
+        photo = message.photo[-1].file_id  # Берем фото в максимальном разрешении
+        caption = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+        await bot.send_photo(chat_id=int(sender), photo=photo, caption=caption,
                              parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    elif message.video:
+        # Если это видео
+        video = message.video.file_id
+        caption = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+        await bot.send_video(chat_id=int(sender), video=video, caption=caption,
+                             parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    elif message.document:
+        # Если это документ
+        document = message.document.file_id
+        caption = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+        await bot.send_document(chat_id=int(sender), document=document, caption=caption,
+                                parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    elif message.audio:
+        # Если это аудио
+        audio = message.audio.file_id
+        caption = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+        await bot.send_audio(chat_id=int(sender), audio=audio, caption=caption,
+                             parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    elif message.voice:
+        # Если это голосовое сообщение
+        voice = message.voice.file_id
+        caption = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+        await bot.send_voice(chat_id=int(sender), voice=voice, caption=caption,
+                             parse_mode='html', reply_markup=keyboard_sender.as_markup())
+    elif message.video_note:
+        # Если это видео-сообщение
+        video_note = message.video_note.file_id
+        await bot.send_video_note(chat_id=int(sender), video_note=video_note,
+                                  reply_markup=keyboard_sender.as_markup())
+    elif message.sticker:
+        # Если это стикер
+        sticker = message.sticker.file_id
+        await bot.send_sticker(chat_id=int(sender), sticker=sticker,
+                               reply_markup=keyboard_sender.as_markup())
     else:
-        # Если нет фото, отправим текстовое сообщение с объединенным контентом
-        combined_text = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
-        if message.text:
-            combined_text += f'<i>{message.text}</i>\n\n'
-        elif message.caption:
-            combined_text += f'<i>{message.caption}</i>\n\n'
-        combined_text += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
-        
-        await bot.send_message(chat_id=int(sender),
-                               text=combined_text,
-                               parse_mode='html', reply_markup=keyboard_sender.as_markup())
+        # Если это текст или другие типы сообщений
+        # Подготовим объединенное сообщение для отправки
+        if new_message:
+            # Если есть фото для нового сообщения, отправим его с объединенным текстом
+            await bot.send_photo(chat_id=int(sender), photo=new_message,
+                                 caption='<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+                                         f'<i>{message.text}</i>\n\n'
+                                         '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>',
+                                 parse_mode='html', reply_markup=keyboard_sender.as_markup())
+        else:
+            # Если нет фото, отправим текстовое сообщение с объединенным контентом
+            combined_text = '<b>📬 Ответ на ваше анонимное сообщение:</b>\n\n'
+            if message.text:
+                combined_text += f'<i>{message.text}</i>\n\n'
+            elif message.caption:
+                combined_text += f'<i>{message.caption}</i>\n\n'
+            combined_text += '💌 <b>Хотите получать анонимные сообщения тоже? Нажмите ⬇️</b>'
+            
+            await bot.send_message(chat_id=int(sender),
+                                   text=combined_text,
+                                   parse_mode='html', reply_markup=keyboard_sender.as_markup())
     
     # Отправим пользователю уведомление об отправке ответа
     if answer_sended:
@@ -122,47 +180,96 @@ async def send_action(message, bot, state, data: dict, referer: int):
     keyboard_sender.row(
         InlineKeyboardButton(text='Отправить снова', callback_data=SendAgain(referer=int(referer), action='send').pack()))
     
-    # Подготовим объединенное сообщение для отправки получателю сначала
-    if new_message:
-        # Если есть фото для нового сообщения, отправим его с объединенным текстом
-        caption_text = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
-        if message.text:
-            caption_text += f'<i>{message.text}</i>\n\n'
-        elif message.caption:
-            caption_text += f'<i>{message.caption}</i>\n\n'
-        caption_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
-        
-        # Создаем клавиатуру сначала
-        keyboard_referer = InlineKeyboardBuilder()
-        # Получаем ID сообщения для клавиатуры, но не отправляем отдельное сообщение
-        keyboard_referer.row(InlineKeyboardButton(text='Reply',
-                                                  callback_data=Reply(sender=int(message.from_user.id), action='reply',
-                                                                      referer=int(referer),
-                                                                      reply_message=message.message_id).pack()))
-        
-        await bot.send_photo(chat_id=int(referer), photo=new_message,
-                             caption=caption_text,
+    # Создаем клавиатуру с кнопкой Reply
+    keyboard_referer = InlineKeyboardBuilder()
+    keyboard_referer.row(InlineKeyboardButton(text='Reply',
+                                             callback_data=Reply(sender=int(message.from_user.id), action='reply',
+                                                                 referer=int(referer),
+                                                                 reply_message=message.message_id).pack()))
+    
+    # Отправляем медиафайл или текст в зависимости от типа сообщения
+    if message.photo:
+        # Если это фото
+        photo = message.photo[-1].file_id  # Берем фото в максимальном разрешении
+        caption = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        await bot.send_photo(chat_id=int(referer), photo=photo, caption=caption,
                              parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    elif message.video:
+        # Если это видео
+        video = message.video.file_id
+        caption = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        await bot.send_video(chat_id=int(referer), video=video, caption=caption,
+                             parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    elif message.document:
+        # Если это документ
+        document = message.document.file_id
+        caption = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        await bot.send_document(chat_id=int(referer), document=document, caption=caption,
+                                parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    elif message.audio:
+        # Если это аудио
+        audio = message.audio.file_id
+        caption = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        await bot.send_audio(chat_id=int(referer), audio=audio, caption=caption,
+                             parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    elif message.voice:
+        # Если это голосовое сообщение
+        voice = message.voice.file_id
+        caption = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+        if message.caption:
+            caption += f'<i>{message.caption}</i>\n\n'
+        caption += '💬 <b>Вы можете ответить на это сообщение!</b>'
+        await bot.send_voice(chat_id=int(referer), voice=voice, caption=caption,
+                             parse_mode='html', reply_markup=keyboard_referer.as_markup())
+    elif message.video_note:
+        # Если это видео-сообщение
+        video_note = message.video_note.file_id
+        await bot.send_video_note(chat_id=int(referer), video_note=video_note,
+                                  reply_markup=keyboard_referer.as_markup())
+    elif message.sticker:
+        # Если это стикер
+        sticker = message.sticker.file_id
+        await bot.send_sticker(chat_id=int(referer), sticker=sticker,
+                               reply_markup=keyboard_referer.as_markup())
     else:
-        # Если нет фото, отправим текстовое сообщение с объединенным контентом
-        combined_text = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
-        if message.text:
-            combined_text += f'<i>{message.text}</i>\n\n'
-        elif message.caption:
-            combined_text += f'<i>{message.caption}</i>\n\n'
-        combined_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
-        
-        # Создаем клавиатуру сначала
-        keyboard_referer = InlineKeyboardBuilder()
-        # Получаем ID сообщения для клавиатуры, но не отправляем отдельное сообщение
-        keyboard_referer.row(InlineKeyboardButton(text='Reply',
-                                                  callback_data=Reply(sender=int(message.from_user.id), action='reply',
-                                                                      referer=int(referer),
-                                                                      reply_message=message.message_id).pack()))
-        
-        await bot.send_message(chat_id=int(referer),
-                               text=combined_text,
-                               parse_mode='html', reply_markup=keyboard_referer.as_markup())
+        # Если это текст или другие типы сообщений
+        # Подготовим объединенное сообщение для отправки получателю сначала
+        if new_message:
+            # Если есть фото для нового сообщения, отправим его с объединенным текстом
+            caption_text = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+            if message.text:
+                caption_text += f'<i>{message.text}</i>\n\n'
+            elif message.caption:
+                caption_text += f'<i>{message.caption}</i>\n\n'
+            caption_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
+            
+            await bot.send_photo(chat_id=int(referer), photo=new_message,
+                                 caption=caption_text,
+                                 parse_mode='html', reply_markup=keyboard_referer.as_markup())
+        else:
+            # Если нет фото, отправим текстовое сообщение с объединенным контентом
+            combined_text = '<b>📦 Новое анонимное сообщение для вас:</b>\n\n'
+            if message.text:
+                combined_text += f'<i>{message.text}</i>\n\n'
+            elif message.caption:
+                combined_text += f'<i>{message.caption}</i>\n\n'
+            combined_text += '💬 <b>Вы можете ответить на это сообщение!</b>'
+            
+            await bot.send_message(chat_id=int(referer),
+                                   text=combined_text,
+                                   parse_mode='html', reply_markup=keyboard_referer.as_markup())
     
     # Отправим пользователю уведомление об отправке сообщения
     if send_message_photo:
@@ -191,7 +298,7 @@ async def start_with_referer(message, bot, state, text):
         )
                 
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text='📤 Поделиться своей ссылкой', url=personal_link))
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться своей ссылкой', callback_data=f'share_link:{message.from_user.id}'))
                 
         res = await bot.send_message(chat_id=message.from_user.id, text=welcome_text, reply_markup=keyboard.as_markup())
         await state.set_state(SendMessage.send_message)
@@ -212,14 +319,14 @@ async def start_without_referer(message, bot, state):
     
     if welcome:
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', url=personal_link))
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', callback_data=f'share_link:{message.from_user.id}'))
         
         await bot.send_photo(chat_id=message.from_user.id, photo=welcome,
                              caption=welcome_text,
                              reply_markup=keyboard.as_markup())
     else:
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', url=personal_link))
+        keyboard.row(InlineKeyboardButton(text='📤 Поделиться ссылкой', callback_data=f'share_link:{message.from_user.id}'))
         
         await bot.send_message(chat_id=message.from_user.id,
                                text=welcome_text,

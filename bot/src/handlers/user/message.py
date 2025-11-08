@@ -82,14 +82,6 @@ async def admin_command(message: Message, bot: Bot, db: MongoDbClient, state: FS
 # Handle sending and replying to messages
 @router.message(SendMessage.send_message)
 async def send_message(message: Message, bot: Bot, db: MongoDbClient, state: FSMContext):
-    # Check if the message is a command - if so, don't process as a message to referer
-    if message.text and message.text.startswith('/'):
-        # This is a command, clear the state and ignore
-        await state.clear()
-        await message.answer("❌ <b>Команды недоступны в режиме отправки сообщения.</b>\n\n"
-                             "✅ <i>Операция отправки сообщения отменена.</i>")
-        return
-    
     # Get the FSM context data
     data = await state.get_data()
     if data.get('referer'):

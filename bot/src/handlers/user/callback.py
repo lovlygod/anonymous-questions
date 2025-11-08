@@ -2,7 +2,7 @@ from aiogram import Bot, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from src.callbacks import Reply, GetLink, SendAgain, Start
+from src.callbacks import Reply, GetLink, SendAgain, Start, ShareLink
 from src.utils.db import MongoDbClient
 from src.utils.fsm_state import SendMessage
 from src.utils.functions.user.functions import check_all_subs, not_subscribe, start_with_referer, start_without_referer, \
@@ -188,3 +188,50 @@ async def reply_callback(callback_query: CallbackQuery, bot: Bot, db: MongoDbCli
         await not_subscribe(bot, callback_query.from_user.id, channels_list,
                             callback, int(callback_query.message.message_id))
     await adv_show(callback_query.from_user.id, bot, db)
+
+
+# Share link callback
+@router.callback_query(ShareLink.filter())
+async def share_link_callback(callback_query: CallbackQuery, bot: Bot, callback_data: ShareLink):
+    # Получаем информацию о боте
+    me = await bot.get_me()
+    # Формируем персональную ссылку
+    personal_link = f"https://t.me/{me.username}?start={callback_data.user_id}"
+    
+    # Создаем клавиатуру с кнопкой "Поделиться"
+    keyboard = InlineKeyboardBuilder()
+    # Используем параметр switch_inline_query для открытия окна шаринга Telegram
+    keyboard.row(InlineKeyboardButton(text='📤 Отправить ссылку', switch_inline_query=personal_link))
+    keyboard.row(InlineKeyboardButton(text='📋 Скопировать ссылку', url=personal_link))
+    
+    # Редактируем сообщение, добавляя персональную ссылку и кнопки
+    try:
+        # Проверяем, содержит ли сообщение подпись (caption)
+        if callback_query.message.caption:
+            await bot.edit_message_caption(
+                chat_id=callback_query.from_user.id,
+                message_id=callback_query.message.message_id,
+                caption=f"🔗 <b>Ваша персональная ссылка:</b>\n\n"
+                        f"👉 <code>{personal_link}</code>\n\n"
+                        f"💌 <i>Поделитесь ей с друзьями и начните получать анонимные сообщения!</i>",
+                reply_markup=keyboard.as_markup()
+            )
+        else:
+            await bot.edit_message_text(
+                chat_id=callback_query.from_user.id,
+                message_id=callback_query.message.message_id,
+                text=f"🔗 <b>Ваша персональная ссылка:</b>\n\n"
+                     f"👉 <code>{personal_link}</code>\n\n"
+                     f"💌 <i>Поделитесь ей с друзьями и начните получать анонимные сообщения!</i>",
+                reply_markup=keyboard.as_markup()
+            )
+    except Exception as e:
+        # Если не удалось отредактировать сообщение, отправляем новое
+        await callback_query.message.answer(
+            text=f"🔗 <b>Ваша персональная ссылка:</b>\n\n"
+                 f"👉 <code>{personal_link}</code>\n\n"
+                 f"💌 <i>Поделитесь ей с друзьями и начните получать анонимные сообщения!</i>",
+            reply_markup=keyboard.as_markup()
+        )
+    
+    await callback_query.answer()

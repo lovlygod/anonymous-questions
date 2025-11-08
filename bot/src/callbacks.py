@@ -114,3 +114,7 @@ class AdvMediaEdit(CallbackData, prefix='adv_edit_media'):
 
 class AdvTextEdit(CallbackData, prefix='adv_edit_text'):
     adv_id: int
+
+
+class ShareLink(CallbackData, prefix='share_link'):
+    user_id: int

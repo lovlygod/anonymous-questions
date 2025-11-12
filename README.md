@@ -141,6 +141,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ### 🚀 Проект [https://github.com/lovlygod/anonymous-questions](https://github.com/lovlygod/anonymous-questions)
 
-### 💬 Made with ❤️ by [@lovlyswag](https://t.me/lovlyswag)
+### Made with ❤️ by [@lovlyswag](https://t.me/lovlyswag)
 
 ### Star ⭐ this repo if you found it useful!

@@ -1,146 +1,115 @@
-# Anonymous Questions Bot
+<div align="center">
+  <h1 style="margin-top: 24px;">💎 Anonymous Questions Bot by @lovlydev</h1>
 
-![Python](https://img.shields.io/badge/python-3.8%2B-blue)
-![Telegram](https://img.shields.io/badge/telegram-bot-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+  <p style="font-size: 18px; margin-bottom: 24px;">
+    <b>Telegram bot for receiving anonymous questions through unique links</b>
+  </p>
 
-## Описание
+[Report Bug](https://github.com/lovlygod/anonymous-questions/issues) · [Request Feature](https://github.com/lovlygod/anonymous-questions/issues)
 
-**Anonymous Questions Bot** - это Telegram бот, позволяющий пользователям получать анонимные вопросы от других пользователей через уникальные ссылки. Бот предоставляет удобную админ-панель для управления и мониторинга активности.
+</div>
 
-## Особенности
+---
 
-- **Анонимные вопросы**: Пользователи могут задавать вопросы анонимно, без раскрытия своей личности
-- **Уникальные ссылки**: Каждый пользователь получает уникальную ссылку для получения вопросов
-- **Админ-панель**: Расширенные возможности управления ботом
-- **Поддержка медиа**: Возможность отправки ответов в различных форматах (текст, фото, видео и др.)
-- **Статистика**: Подробная аналитика использования бота
-- **Рассылка**: Возможность отправки сообщений всем пользователям
-- **Реферальная система**: Автогенерация реферальных ссылок для привлечения пользователей
-- **Рекламные посты**: Поддержка показа рекламных материалов
-- **Каналы подписки**: Возможность требовать подписку на каналы для использования бота
+## ✨ Features
 
-## Технологии
+- 🤐 **Anonymous Questions** - Users can ask questions anonymously without revealing their identity
+- 🔗 **Unique Links** - Each user gets a unique link for receiving questions
+- 👨‍💼 **Admin Panel** - Advanced bot management capabilities
+- 📤 **Media Support** - Ability to send responses in various formats (text, photo, video, etc.)
+- 📊 **Statistics** - Detailed analytics of bot usage
+- 📢 **Broadcasting** - Ability to send messages to all users
+- 💰 **Referral System** - Auto-generated referral links for user acquisition
+- 📈 **Advertising Posts** - Support for showing promotional materials
+- 📺 **Subscription Channels** - Ability to require channel subscriptions for bot usage
 
-- **Python 3.8+**: Основной язык программирования
-- **Aiogram**: Асинхронный фреймворк для Telegram Bot API
-- **MongoDB**: База данных для хранения информации о пользователях и вопросах
-- **Redis**: Кэширование и хранение временных данных
-- **Docker**: Контейнеризация приложения
-- **PyMongo**: Драйвер для работы с MongoDB
-- **Environs**: Управление переменными окружения
+## 🚀 Quick Start
 
-## Установка и запуск
+### 1. Installation
 
-### Локальный запуск
-
-1. Клонируйте репозиторий:
 ```bash
 git clone https://github.com/lovlygod/anonymous-questions.git
 cd anonymous-questions
 ```
 
-2. Установите зависимости:
+### 2. Configuration
+
+Create `.env` file based on example:
+
 ```bash
-pip install -r bot/requirements.txt
+cp .env.example .env
 ```
 
-3. Создайте файл `.env` на основе `.env.example` и настройте переменные окружения:
+Edit `.env` file with your settings:
+
 ```env
-API_TOKEN=ваш_токен_телеграм_бота
+API_TOKEN=your_telegram_bot_token
 MONGO_URI=mongodb://localhost:27017/anonymous_questions
 REDIS_HOST=localhost
 REDIS_PORT=6379
-ADMIN_ID=ваш_телеграм_id
+ADMIN_ID=your_telegram_id
+DATABASE_NAME=anonymous_questions
 ```
 
-4. Запустите бота:
+### 3. Usage
+
+#### Local Execution:
 ```bash
 python bot/main.py
 ```
 
-### Запуск с Docker
-
-1. Соберите образ:
+#### Docker Execution:
 ```bash
 docker build -t anonymous-questions-bot .
-```
-
-2. Запустите контейнер:
-```bash
 docker run -d --env-file .env anonymous-questions-bot
 ```
 
-### Запуск с Docker Compose
-
-1. Запустите сервисы:
+#### Docker Compose Execution:
 ```bash
 docker-compose up -d
 ```
 
-## Структура проекта
+## Commands
 
-```
-anonymous-questions/
-├── bot/
-│   ├── main.py                 # Основной файл запуска бота
-│   ├── config.py              # Конфигурация приложения
-│   ├── requirements.txt       # Зависимости
-│   └── src/
-│       ├── handlers/          # Обработчики команд и сообщений
-│       │   ├── admin/         # Обработчики админ-панели
-│       │   └── user/          # Обработчики пользовательской части
-│       ├── models/            # Модели данных
-│       ├── utils/             # Вспомогательные функции
-│       │   ├── functions/     # Функции для работы с данными
-│       │   └── middlewares/   # Промежуточные обработчики
-│       └── callbacks.py       # Обработчики callback-запросов
-├── docker-compose.yml         # Конфигурация Docker Compose
-├── Dockerfile                # Docker-файл для основного сервиса
-├── dockerfile.bot            # Альтернативный Docker-файл
-├── .env.example              # Пример файла переменных окружения
-├── .gitignore                # Файлы, игнорируемые Git
-└── README.md                 # Документация
-```
+### For Users:
+| Command | Description |
+|---------|-------------|
+| `/start` | Start the bot and get your unique link |
+| `/my_link` | Get your unique question link |
+| `/stats` | View your question statistics |
 
-## Функциональность
+### For Administrators:
+| Command | Description |
+|---------|-------------|
+| `/admin` | Access admin panel |
+| `/stats` | View bot statistics |
+| `/broadcast` | Send broadcast message |
+| `/users` | List of users |
+| `/channels` | Manage subscription channels |
+| `/referrals` | Referral system management |
 
-### Для пользователей:
-- Получение уникальной ссылки для анонимных вопросов
-- Ответы на вопросы в различных форматах
-- Возможность управления своими вопросами
+## Technology Stack
 
-### Для администраторов:
-- Просмотр статистики пользователей и активности
-- Выгрузка данных пользователей
-- Рассылка сообщений
-- Управление каналами подписки
-- Управление реферальной системой
-- Добавление и редактирование рекламных постов
+- Python 3.8+
+- Aiogram - Asynchronous framework for Telegram Bot API
+- MongoDB - Database for storing user and question information
+- Redis - Caching and temporary data storage
+- Docker - Application containerization
+- PyMongo - MongoDB driver
+- Environs - Environment variable management
 
-## Переменные окружения
+## Requirements
 
-- `API_TOKEN` - Токен Telegram бота
-- `MONGO_URI` - Строка подключения к MongoDB
-- `REDIS_HOST` - Хост Redis (по умолчанию localhost)
-- `REDIS_PORT` - Порт Redis (по умолчанию 6379)
-- `ADMIN_ID` - ID администратора бота
-- `DATABASE_NAME` - Имя базы данных (по умолчанию anonymous_questions)
+- Python >= 3.8
+- Libraries: aiogram, pymongo, redis, etc. (see requirements.txt)
 
-## Вклад в проект
+## License
+[MIT](LICENSE)
 
-1. Форкните репозиторий
-2. Создайте ветку для вашей фичи: `git checkout -b feature/AmazingFeature`
-3. Зафиксируйте изменения: `git commit -m 'Add some AmazingFeature'`
-4. Отправьте ветку: `git push origin feature/AmazingFeature`
-5. Создайте Pull Request
+<div align="center">
 
-## Лицензия
+### Made with ❤️ by [@lovly](https://t.me/lovlyswag)
 
-Distributed under the MIT License. See `LICENSE` for more information.
+**Star ⭐ this repo if you found it useful!**
 
-### 🚀 Проект [https://github.com/lovlygod/anonymous-questions](https://github.com/lovlygod/anonymous-questions)
-
-### Made with ❤️ by [@lovlyswag](https://t.me/lovlyswag)
-
-### Star ⭐ this repo if you found it useful!
+</div>
